@@ -5,7 +5,9 @@ This is also the companion repository for our paper titled ["Using Supervised Ma
 This package was translated from previous Matlab codes. As Python is more popular in machine learning and deep learning, we decided to use Python for future coding.
 
 ## Classifier Showcase (Matlab version)
-<div align=center>![SVM Classifier](https://github.com/uqzzhao/ml4ms/blob/master/examples/images/SVM_0.9_0817_prediction.gif)</div>
+<p align="center">
+  <img width="460" height="600" src="https://github.com/uqzzhao/ml4ms/blob/master/examples/images/SVM_0.9_0817_prediction.gif">
+</p>
 
 
 ## Data
