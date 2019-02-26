@@ -2,7 +2,10 @@
 Machine Learning for Microseismic - A Python package for implementing automated microseismic event detection with machine learning.
 This is also the companion repository for our paper titled ["Using Supervised Machine Learning to Distinguish Microseismic from Noise Events"](https://www.researchgate.net/publication/319622797_Using_Supervised_Machine_Learning_to_Distinguish_Microseismic_from_Noise_Events?_sg=XCg5ScjsVBCwpHsV6MaoNuW8Et7dcLb7PdcH3tcYW7Cm1NGh9HVbuS3Juh1-XadkFXs91zDJnBYFlK7jjqRkvUQAfhIwN3VmiQWQgvpN.fsWiGLMtbYWUL-7t-BlYfurJ1KPUnffA7IXytqI7qARTbwHbKCzKX7eNAf7TDSUBDRdpgvKTbMrkqTLaxVjS9Q).
 
-## Classifier Showcase
+This package was translated from previous Matlab codes. As Python is more popular in machine learning and deep learning, we decided to use Python for future coding.
+
+## Classifier Showcase (Matlab version)
+
 
 
 ## Data
