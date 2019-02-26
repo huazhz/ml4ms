@@ -31,7 +31,7 @@ Our results showed that a SVM classifier with Gaussian kernel performs best for 
 
 ## Reference
 If you re-use this work, please cite:
-'''
+```
 @incollection{zhao2017using,
   title={Using supervised machine learning to distinguish microseismic from noise events},
   author={Zhao, Zhengguang and Gross, Lutz},
