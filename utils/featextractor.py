@@ -1,92 +1,25 @@
-'''
-
-# A python package for machine learning based classification of microseismic events and noise events
-#
-# (C) Zhengguang Zhao, 2016 - 2019
-
-
-'''
-
-
+## Extract features 
 import os
-
-
-from sklearn import svm
-from sklearn.metrics import confusion_matrix
-from sklearn.preprocessing import normalize, scale
-
-from scipy import stats
-
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-import seaborn as sns
-
 import numpy as np
 
-import pandas as pd
-from pandas import set_option
 
-from utils.sigproc import (mad, peakfreq_from_fft, spectralRollOff, spectralCentroidAndSpread, chromaFeatures, chromaFeaturesInit, rssq,\
-    peak2rms, rms, range_bytes, energy, zcr_2, zcr)
-from utils.entropy import spectral_entropy, sample_entropy, shannon_entropy
-from utils.speech_features import mfcc
-from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm
+class Feature_Extractor:
+    def __init__(self, file_name):
 
+        self.file_name = file_name
+        self.features_data = None
 
-import time
-
-# matplotlib inline
-plt.style.use('ggplot')
-
-
-def main():
     
+    def save_features(self):
+        if os.path.exists(self.file_name):
+            self.features_data.to_csv(self.file_name)
+        else:
+            print('\nError! File does not exists!\n')
     
-    set_option("display.max_rows", 20)
-    pd.options.mode.chained_assignment = None
+    def extract_features(self, data, fs, window_length, overlap_length, signal_length):
 
-       
-    # Load raw data and labels
-    print("Loading dataset in progress...\n")
-    start = time.clock()    
 
-    training_file = 'F:\\datafolder\\ml_dl\\training_data_5.csv'
-    if not os.path.exists(training_file):
-            
-        dataset = load_data('F:\\datafolder\\ml_dl\\signals5.txt') 
-        labels_df = load_csv('F:\\datafolder\\ml_dl\\labelnums5.txt', ['Class']) # 0 = Noise 1 = Event
-        filenames_df = load_csv('F:\\datafolder\\ml_dl\\filenames5.txt', ['FileName'])
-
-        # dataset = load_data('F:\\Bitbucket\\MATPS_\\OUTPUT\\dataset5_prepare4python\\signals5.txt') 
-        # labels = load_label('F:\\Bitbucket\\MATPS_\\OUTPUT\\dataset5_prepare4python\\labels5.txt')
-
-        # Reshape data and labels
-        data = dataset.reshape(len(dataset), 512)
-        # plt.plot(data[0,:])
-        # plt.show()
-
-        
-        labels = labels_df['Class']
-
-        filenames = filenames_df['FileName']
-
-        elapsed = (time.clock() - start)
-        print("Loading dataset completed[OK].\n")
-        print("Time used for loading dataset: ",elapsed, '\n')
-
-        
-        
-
-        ## Extract features 
-        fs = 500 # unit is Hz 
-        window_length = 512  # a wavelength is usually 30 samples, we choose 2*wavelength
-        overlap_length = int(window_length/2)
         step_length = window_length - overlap_length
-        signal_length = 512
-
         number_of_windows = int(np.floor((signal_length-window_length)/step_length) + 1)
         #print(number_of_windows)
 
@@ -268,7 +201,7 @@ def main():
 
                 
 
-        training_data_dict = {'Class': signalClass,
+        features_dict = {'Class': signalClass,
                             'FileName': fileName,
                             'Mean': meanValue,
                             'Median': medianValue,
@@ -322,191 +255,10 @@ def main():
             
         index = pd.Index(data= np.int_(np.linspace(1, n_win * nsignal,num = n_win * nsignal)),name="FeatureID")
 
-        training_data = pd.DataFrame(training_data_dict, index=index)
+        self.features_data = pd.DataFrame(features_dict, index=index)
 
-        training_data.to_csv(training_file)
+       
 
         elapsed = (time.clock() - start)
         print("Extracting features completed[OK].\n")
         print("Time used for extracting features: ",elapsed, '\n')
-        
-    
-    else:
-        training_data = pd.read_csv(training_file)
-
-    # print(training_data) 
-     
-    ## find Nan
-    data = training_data
-    for columname in data.columns:
-        if data[columname].count() != len(data):
-            loc = data[columname][data[columname].isnull().values==True].index.tolist()
-            print('Column Name："{}", Row #{} has null value.'.format(columname,loc))
-
-    
-    
-
-    ## Training using Features Vector
-
-    blind = training_data[training_data['FileName'] == '41532_140407_224100_1000']
-    training_data = training_data[training_data['FileName'] != '41532_140407_224100_1000']
-    training_data['FileName'] = training_data['FileName'].astype('category')
-    
-    print(training_data['FileName'].unique())
-
-
-    class_colors = ['#196F3D', '#F5B041']
-
-    class_labels = ['Noise', 'Event']
-    #class_color_map is a dictionary that maps class labels
-    #to their respective colors
-    class_color_map = {}
-    for ind, label in enumerate(class_labels):
-        class_color_map[label] = class_colors[ind]
-
-    def label_class(row, labels):
-        ind = row['Class'] -1
-        #print(ind)
-        return labels[ind]
-        
-    training_data.loc[:,'ClassLabels'] = training_data.apply(lambda row: label_class(row, class_labels), axis=1)
-    print(training_data.describe())
-
-    # training_data.dropna(axis=0,how='any') #drop all rows that have any NaN values
-    #training_data.fillna(0)
-
-
-
-
-    #count the number of unique entries for each class, sort them by
-    #class number (instead of by number of entries)
-    class_counts = training_data['Class'].value_counts().sort_index()
-    #use facies labels to index each count
-    class_counts.index = class_labels
-
-    class_counts.plot(kind='bar',color=class_colors, 
-                    title='Distribution of Training Data by Class')
-    print(class_counts)
-
-    # ## save plot display settings to change back to when done plotting with seaborn
-    # inline_rc = dict(mpl.rcParams)
-
-    # sns.set()
-    # sns.pairplot(training_data.drop(['FileName','Class'],axis=1), hue='ClassLabels', palette=class_color_map, hue_order=list(reversed(class_labels)))
-
-    # #switch back to default matplotlib plot style
-    # mpl.rcParams.update(inline_rc)
-
-
-    ## Conditioning the data set
-    correct_class_labels = training_data['Class'].values
-
-    feature_vectors = training_data.drop(['FileName','Class','ClassLabels'], axis=1)
-    feature_vectors.describe()
-
-    #feature_vectors.dropna(axis=0,how='any')
-
-
-    from sklearn import preprocessing
-
-    scaler = preprocessing.StandardScaler().fit(feature_vectors)
-    scaled_features = scaler.transform(feature_vectors)
-    print(np.isnan(scaled_features))
-
-    # reformat features matrix to:  X : array-like, shape (n_samples, n_features)
-    
-
-    
-
-
-    from sklearn.model_selection import train_test_split
-
-    X_train, X_test, y_train, y_test = train_test_split(scaled_features, correct_class_labels, test_size=0.2, random_state=42)
-
-    ## Training the SVM classifier
-    
-    clf = svm.SVC()
-    clf.fit(X_train,y_train)
-    predicted_labels = clf.predict(X_test)
-
-
-    
-
-    conf = confusion_matrix(y_test, predicted_labels)
-    display_cm(conf, class_labels, hide_zeros=True)
-
-    def accuracy(conf):
-        total_correct = 0.
-        nb_classes = conf.shape[0]
-        for i in np.arange(0,nb_classes):
-            total_correct += conf[i][i]
-        acc = total_correct/sum(sum(conf))
-        return acc
-    
-    
-    print('Classification accuracy = %f' % accuracy(conf))
-    
-
-    ## Model parameter selection
-    #model selection takes a few minutes, change this variable
-    #to true to run the parameter loop
-    do_model_selection = True
-
-    if do_model_selection:
-        C_range = np.array([.01, 1, 5, 10, 20, 50, 100, 1000, 5000, 10000])
-        gamma_range = np.array([0.0001, 0.001, 0.01, 0.1, 1, 10])
-        
-        fig, axes = plt.subplots(3, 2, 
-                            sharex='col', sharey='row',figsize=(10,10))
-        plot_number = 0
-        for outer_ind, gamma_value in enumerate(gamma_range):
-            row = int(plot_number / 2)
-            column = int(plot_number % 2)
-            cv_errors = np.zeros(C_range.shape)
-            train_errors = np.zeros(C_range.shape)
-            for index, c_value in enumerate(C_range):
-                
-                clf = svm.SVC(C=c_value, gamma=gamma_value)
-                clf.fit(X_train,y_train)
-                
-                train_conf = confusion_matrix(y_train, clf.predict(X_train))
-                cv_conf = confusion_matrix(y_test, clf.predict(X_test))
-            
-                cv_errors[index] = accuracy(cv_conf)
-                train_errors[index] = accuracy(train_conf)
-
-            ax = axes[row, column]
-            ax.set_title('Gamma = %g'%gamma_value)
-            ax.semilogx(C_range, cv_errors, label='CV error')
-            ax.semilogx(C_range, train_errors, label='Train error')
-            plot_number += 1
-            ax.set_ylim([0.2,1])
-            
-        ax.legend(bbox_to_anchor=(1.05, 0), loc='lower left', borderaxespad=0.)
-        fig.text(0.5, 0.03, 'C value', ha='center',
-                fontsize=14)
-                
-        fig.text(0.04, 0.5, 'Classification Accuracy', va='center', 
-                rotation='vertical', fontsize=14)
-
-    clf = svm.SVC(C=10, gamma=1)        
-    clf.fit(X_train, y_train)
-
-    cv_conf = confusion_matrix(y_test, clf.predict(X_test))
-
-    print('Optimized signal classification accuracy = %.2f' % accuracy(cv_conf))
-
-    display_cm(cv_conf, class_labels, 
-           display_metrics=True, hide_zeros=True)
-
-    
-    
-
-
-
-
-
-
-# This will actually run this code if called stand-alone
-if __name__ == '__main__':
-    main()
