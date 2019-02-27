@@ -1,3 +1,11 @@
+'''
+@author:     Zhengguang Zhao
+@copyright:  Copyright 2016-2019, Zhengguang Zhao.
+@license:    MIT
+@contact:    zg.zhao@outlook.com
+
+'''
+
 import numpy as np
 
 def accuracy(conf):

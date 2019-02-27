@@ -1,3 +1,11 @@
+'''
+@author:     Zhengguang Zhao
+@copyright:  Copyright 2016-2019, Zhengguang Zhao.
+@license:    MIT
+@contact:    zg.zhao@outlook.com
+
+'''
+
 import os
 import numpy as np
 
@@ -25,38 +33,16 @@ def read_dataset(root_dir,archive_name,dataset_name):
 
     datasets_dict = {}
 
+    
+    file_name = os.path.join(root_dir,'archives', archive_name, dataset_name, dataset_name)
 
+    x_train, y_train = readucr(file_name+'_TRAIN.txt')
 
-    if archive_name == 'mts_archive':
+    x_test, y_test = readucr(file_name+'_TEST.txt')
 
-        file_name = os.path.join(root_dir,'archives', archive_name, dataset_name)
+    datasets_dict[dataset_name] = (x_train.copy(),y_train.copy(),x_test.copy(),
 
-        x_train = np.load(os.path.join(file_name,'x_train.npy'))
-
-        y_train = np.load(os.path.join(file_name, 'y_train.npy'))
-
-        x_test = np.load(os.path.join(file_name, 'x_test.npy'))
-
-        y_test = np.load(os.path.join(file_name, 'y_test.npy'))
-
-
-
-        datasets_dict[dataset_name] = (x_train.copy(), y_train.copy(), x_test.copy(),
-
-                                       y_test.copy())
-
-
-    else:
-
-        file_name = os.path.join(root_dir,'archives', archive_name, dataset_name, dataset_name)
-
-        x_train, y_train = readucr(file_name+'_TRAIN.txt')
-
-        x_test, y_test = readucr(file_name+'_TEST.txt')
-
-        datasets_dict[dataset_name] = (x_train.copy(),y_train.copy(),x_test.copy(),
-
-            y_test.copy())
+        y_test.copy())
 
 
 
@@ -72,6 +58,81 @@ def readucr(filename):
     X = data[:,1:]
 
     return X, Y
+
+
+
+
+
+
+def read_data(file_path):
+    import pandas as pd
+
+    column_names = ['user-id', 'activity',
+                    'timestamp', 'x-axis', 'y-axis', 'z-axis']
+    data = pd.read_csv(file_path, header=None, names=column_names)
+    return data
+
+
+def load_data(file_path):
+    f = open(file_path)
+    data = np.loadtxt(fname=f, delimiter=',')
+    f.close()
+    return data
+
+
+def load_csv(file_path, header = 0, column_names = None):
+    import pandas as pd
+    f = open(file_path)
+    data = pd.read_csv(file_path, header= header, names=column_names)
+    f.close()
+    return data
+
+
+def feature_normalize(dataset):
+    mu = np.mean(dataset, axis=1)
+    sigma = np.std(dataset, axis=1)
+    return (dataset - mu) / sigma
+
+
+def wave_norm(dataset):
+
+    l = len(dataset)
+    for i in np.arange(l):
+        w = dataset[i, :]
+        wnorm = w / max(abs(w))
+        dataset[i, :] = wnorm
+    return dataset
+
+
+
+
+def windows(data, size):
+    start = 0
+    while start < data.count():
+        yield start, start + size
+        start += (size / 2)
+
+
+def segment_signal(data, window_size=90):
+    from scipy import stats
+
+    segments = np.zeros((0, window_size, 3))
+    labels = np.zeros((0))
+
+    for (start, end) in windows(data["timestamp"], window_size):
+        start = int(start)
+        # print(start)
+        end = int(end)
+        # print(end)
+        x = data["x-axis"][start: end]
+        # print(x)
+        y = data["y-axis"][start: end]
+        z = data["z-axis"][start: end]
+        if(len(data["timestamp"][start: end]) == window_size):
+            segments = np.vstack([segments, np.dstack([x, y, z])])
+            labels = np.append(labels, stats.mode(
+                data["activity"][start: end])[0][0])
+    return segments, labels
 
 
 
@@ -148,77 +209,4 @@ def display_adj_cm(
         
     display_cm(adj_cm, labels, hide_zeros, 
                              display_metrics)
-
-
-
-
-def read_data(file_path):
-    import pandas as pd
-
-    column_names = ['user-id', 'activity',
-                    'timestamp', 'x-axis', 'y-axis', 'z-axis']
-    data = pd.read_csv(file_path, header=None, names=column_names)
-    return data
-
-
-def load_data(file_path):
-    f = open(file_path)
-    data = np.loadtxt(fname=f, delimiter=',')
-    f.close()
-    return data
-
-
-def load_csv(file_path, column_names):
-    #column_names = ['event']
-    f = open(file_path)
-    data = pd.read_csv(file_path, header=None, names=column_names)
-    f.close()
-    return data
-
-
-def feature_normalize(dataset):
-    mu = np.mean(dataset, axis=1)
-    sigma = np.std(dataset, axis=1)
-    return (dataset - mu) / sigma
-
-
-def wave_norm(dataset):
-
-    l = len(dataset)
-    for i in np.arange(l):
-        w = dataset[i, :]
-        wnorm = w / max(abs(w))
-        dataset[i, :] = wnorm
-    return dataset
-
-
-
-
-def windows(data, size):
-    start = 0
-    while start < data.count():
-        yield start, start + size
-        start += (size / 2)
-
-
-def segment_signal(data, window_size=90):
-    from scipy import stats
-
-    segments = np.zeros((0, window_size, 3))
-    labels = np.zeros((0))
-
-    for (start, end) in windows(data["timestamp"], window_size):
-        start = int(start)
-        # print(start)
-        end = int(end)
-        # print(end)
-        x = data["x-axis"][start: end]
-        # print(x)
-        y = data["y-axis"][start: end]
-        z = data["z-axis"][start: end]
-        if(len(data["timestamp"][start: end]) == window_size):
-            segments = np.vstack([segments, np.dstack([x, y, z])])
-            labels = np.append(labels, stats.mode(
-                data["activity"][start: end])[0][0])
-    return segments, labels
 

@@ -1,24 +1,51 @@
+'''
+@author:     Zhengguang Zhao
+@copyright:  Copyright 2016-2019, Zhengguang Zhao.
+@license:    MIT
+@contact:    zg.zhao@outlook.com
+
+'''
+
 ## Extract features 
 import os
 import numpy as np
+from scipy import stats
+import pandas as pd
+
+from .sigproc import (mad, peakfreq_from_fft, spectralRollOff, spectralCentroidAndSpread, chromaFeatures, chromaFeaturesInit, rssq,\
+    peak2rms, rms, range_bytes, energy, zcr_2, zcr)
+from .entropy import spectral_entropy, sample_entropy, shannon_entropy
+from .speech_features import mfcc
 
 
-class Feature_Extractor:
-    def __init__(self, file_name):
+import time 
 
-        self.file_name = file_name
-        self.features_data = None
+class FeatureExtractor:
+    def __init__(self):
+
+        self.dataset = None
+        self.feature_data = None
 
     
-    def save_features(self):
-        if os.path.exists(self.file_name):
-            self.features_data.to_csv(self.file_name)
-        else:
-            print('\nError! File does not exists!\n')
+    def set_dataset(self, df):
+        self.dataset = df
+
+    def save_features(self, file_name):
+        
+        self.feature_data.to_csv(file_name)
+
+        print('\nFeatures data saved!\n')
     
-    def extract_features(self, data, fs, window_length, overlap_length, signal_length):
+    def extract_features(self, fs, window_length, overlap_length, signal_length):
 
+                
+        labels = self.dataset['Class']
 
+        filenames = self.dataset['FileName']
+
+        data = np.array(self.dataset.loc[:, list(range(signal_length))], dtype = np.float)
+
+        
         step_length = window_length - overlap_length
         number_of_windows = int(np.floor((signal_length-window_length)/step_length) + 1)
         #print(number_of_windows)
@@ -201,7 +228,7 @@ class Feature_Extractor:
 
                 
 
-        features_dict = {'Class': signalClass,
+        feature_dict = {'Class': signalClass,
                             'FileName': fileName,
                             'Mean': meanValue,
                             'Median': medianValue,
@@ -255,7 +282,7 @@ class Feature_Extractor:
             
         index = pd.Index(data= np.int_(np.linspace(1, n_win * nsignal,num = n_win * nsignal)),name="FeatureID")
 
-        self.features_data = pd.DataFrame(features_dict, index=index)
+        self.feature_data = pd.DataFrame(feature_dict, index=index)
 
        
 

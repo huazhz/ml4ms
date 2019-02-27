@@ -1,3 +1,11 @@
+'''
+@author:     Zhengguang Zhao
+@copyright:  Copyright 2016-2019, Zhengguang Zhao.
+@license:    MIT
+@contact:    zg.zhao@outlook.com
+
+'''
+
 from __future__ import division
 import numpy as np
 from numpy.fft import rfft
