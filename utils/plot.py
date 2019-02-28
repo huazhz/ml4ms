@@ -5,9 +5,38 @@
 @contact:    zg.zhao@outlook.com
 
 '''
-
+import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
 
+def visualize_ml_result(data, label, classifier, class_name, step = 1, count = None):
+    '''
+    Only works for two features
+    '''
+
+    
+    if count == None:        
+        X_set, y_set = data, label
+    elif  len(label) < count:
+        X_set, y_set = data, label
+    else:
+        X_set, y_set = data[:50,:], label[:50]
+
+    X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = step),
+                        np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = step))
+    plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+                alpha = 0.75, cmap = ListedColormap(('red', 'green')))
+    plt.xlim(X1.min(), X1.max())
+    plt.ylim(X2.min(), X2.max())
+    for i, j in enumerate(np.unique(y_set)):
+        print(i,j)
+        plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
+                    c = ListedColormap(('red', 'green'))(i), label = j)
+    plt.title('SVM (Training set)')
+    plt.xlabel(class_name[0])
+    plt.ylabel(class_name[1])
+    plt.legend()
+    plt.show()
 
 def plot_axis(ax, x, y, title):
     ax.plot(x, y)

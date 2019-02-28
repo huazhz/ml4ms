@@ -31,6 +31,7 @@ from pandas import set_option
 
 from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm, create_directory
 from utils.featextractor import FeatureExtractor
+from utils.plot import visualize_ml_result
 
 
 
@@ -96,7 +97,7 @@ def main():
         training_data = extractor.feature_data
 
     else:
-        training_data = pd.read_csv(file_name)
+        training_data = pd.read_csv(file_name, header= 0, index_col= False)
 
 
     data = training_data
@@ -163,17 +164,19 @@ def main():
 
     classifier = create_classifier(classifier_name)
     classifier.set_data(training_data, class_labels)
-    classifier.split_dataset(0.2)
+    classifier.visualize_binary_class('Peak Frequency', 'MFCC 1', 1)
+
+    classifier.split_dataset(classifier.scaled_features)
     classifier.fit() 
 
-    C_range = np.array([.01, 1, 5, 10, 20, 50, 100, 1000, 5000, 10000])
-    gamma_range = np.array([0.0001, 0.001, 0.01, 0.1, 1, 10])
-    classifier.model_param_selection(C_range, gamma_range)
-
-
-    classifier.fit_with_selected_model_param(10,1)
+    # C_range = np.array([.01, 1, 5, 10, 20, 50, 100, 1000, 5000, 10000])
+    # gamma_range = np.array([0.0001, 0.001, 0.01, 0.1, 1, 10])
+    # classifier.model_param_selection(C_range, gamma_range)
+    # classifier.fit_with_selected_model_param(10, 'auto')
 
     print('\nTraining completed[OK]')
+
+    
 
 
 # This will actually run this code if called stand-alone

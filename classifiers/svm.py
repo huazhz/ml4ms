@@ -36,6 +36,8 @@ class ClassifierSVM:
         self.feature_vector = None
         self.scaled_features = None
 
+        self.clf = None
+
         self.X_train = None
         self.y_train = None
         self.X_test = None
@@ -66,26 +68,102 @@ class ClassifierSVM:
         # reformat features matrix to:  X : array-like, shape (n_samples, n_features)
     
 
+    
+    def split_dataset(self, features, test_size = 0.2, random_state=42):
 
-    def split_dataset(self, test_size, random_state=42):
-
-        X_train, X_test, y_train, y_test = train_test_split(self.scaled_features, self.correct_class_labels, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(features, self.correct_class_labels, test_size=0.2, random_state=42)
 
         self.X_train = X_train.copy()
         self.y_train = y_train.copy()
         self.X_test = X_test.copy()
         self.y_test = y_test.copy()
 
+    def visualize_binary_class(self, class1, class2,  h = 1, count = None):
 
-    def fit(self): 
-        
+        import matplotlib.pyplot as plt
 
+        data = self.training_data.loc[:, [class1, class2]].values
+        label = self.training_data['Class'].values
+
+        scaler = preprocessing.StandardScaler().fit(data)
+        scaled_features = scaler.transform(data)
+
+        X_train, X_test, y_train, y_test = train_test_split(scaled_features, label, test_size=0.2, random_state=42)
+
+        if count != None and len(label) > count:        
+            X = X_train[:count,:].copy()
+            y = y_train[:count].copy()
         
+        else:
+            X = X_train.copy()
+            y = y_train.copy()
+
+        # we create an instance of SVM and fit out data. We do not scale our
+        # data since we want to plot the support vectors
+        C = 1.0  # SVM regularization parameter
+        svc = svm.SVC(kernel='linear', C=C).fit(X, y)
+        rbf_svc = svm.SVC(kernel='rbf', gamma=0.7, C=C).fit(X, y)
+        poly_svc = svm.SVC(kernel='poly', degree=3, C=C).fit(X, y)
+        lin_svc = svm.LinearSVC(C=C).fit(X, y)
+
+        # create a mesh to plot in
+        
+        x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+        y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                            np.arange(y_min, y_max, h))
+
+        # title for the plots
+        titles = ['SVC with linear kernel',
+                'LinearSVC (linear kernel)',
+                'SVC with RBF kernel',
+                'SVC with polynomial (degree 3) kernel']
+
+
+        for i, clf in enumerate((svc, lin_svc, rbf_svc, poly_svc)):
+            # Plot the decision boundary. For that, we will assign a color to each
+            # point in the mesh [x_min, m_max]x[y_min, y_max].
+            plt.subplot(2, 2, i + 1)
+            plt.subplots_adjust(wspace=0.4, hspace=0.4)
+
+            Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+
+            # Put the result into a color plot
+            Z = Z.reshape(xx.shape)
+            plt.contourf(xx, yy, Z, cmap=plt.cm.Paired, alpha=0.5)
+
+            # Plot also the training points
+            plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Paired)
+            plt.xlabel(class1)
+            plt.ylabel(class2)
+            plt.xlim(xx.min(), xx.max())
+            plt.ylim(yy.min(), yy.max())
+            plt.xticks(())
+            plt.yticks(())
+            plt.title(titles[i])
+
+        plt.show()
+
+    def pca_2d(self):
+        '''
+        ## PCA analysis
+        # 1. The PCA algorithm:
+        # 2. takes as input a dataset with many features.
+        # reduces that input to a smaller set of features (user-defined or algorithm-determined) 
+        # by transforming the components of the feature set into what it considers as the main (principal) components.
+        '''
+        from sklearn.decomposition import PCA
+        pca = PCA(n_components=2).fit(self.feature_vector)
+        pca_2d = pca.transform(self.feature_vector)
+
+        return pca_2d
+
+    def fit(self, kernel = 'rbf', random_state = 0):        
         ## Training the SVM classifier
         
-        clf = svm.SVC()
-        clf.fit(self.X_train, self.y_train)
-        predicted_labels = clf.predict(self.X_test)
+        self.clf = svm.SVC(kernel= kernel, random_state = random_state)
+        self.clf.fit(self.X_train, self.y_train)
+        predicted_labels = self.clf.predict(self.X_test)
 
         
         print('\n') 
@@ -135,13 +213,13 @@ class ClassifierSVM:
 
         plt.show()
 
-    def fit_with_selected_model_param(self, C, gamma):
+    def fit_with_selected_model_param(self, C, gamma, kernel = 'rbf', random_state = 0):
 
-        clf = svm.SVC(C=10, gamma=1)        
-        clf.fit(self.X_train, self.y_train)
+        self.clf = svm.SVC(C=10, gamma=1, kernel = kernel, random_state= random_state)        
+        self.clf.fit(self.X_train, self.y_train)
 
         print('\n')
-        cv_conf = confusion_matrix(self.y_test, clf.predict(self.X_test))
+        cv_conf = confusion_matrix(self.y_test, self.clf.predict(self.X_test))
         display_cm(cv_conf, self.class_labels, 
             display_metrics=True, hide_zeros=True)
         print('\nOptimized signal classification accuracy = %.2f' % accuracy(cv_conf))
