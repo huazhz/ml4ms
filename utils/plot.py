@@ -9,6 +9,57 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
+def crossplot_features(features, class_names, display_type = 'histogram'):
+    fig,axes =plt.subplots(10,5, figsize=(12, 9)) # 5 columns each containing 10 figures, total 50 features   
+
+    
+    #featuers = features.drop(['FileName','FeatureID'],axis=1)
+
+    event = features[features['Class'] == 1]
+    noise = features[features['Class'] == 2]
+
+    events = event.drop(['Class','FileName','FeatureID'],axis=1).as_matrix()
+    noises = noise.drop(['Class','FileName','FeatureID'],axis=1).as_matrix()
+
+    dataset = features.drop(['Class','FileName','FeatureID'],axis=1)
+    data = features.drop(['Class','FileName','FeatureID'],axis=1).values
+    feature_names = dataset.columns.values.tolist()
+    feature_count = len(feature_names)
+
+    ax=axes.ravel()# flat axes with numpy ravel
+    for i in range(feature_count):
+        #_,bins=np.histogram(data[:,i],bins=feature_count)
+        n_bins = feature_count
+        if display_type == 'histogram':
+            
+            ax[i].hist(events[:,i],bins=n_bins,color='r',alpha=.5)# red color for malignant class
+            ax[i].hist(noises[:,i],bins=n_bins,color='g',alpha=0.3)# alpha is           for transparency in the overlapped region 
+        else:
+            ax[i].scatter(events[:,i], color='r',alpha=.5)# red color for malignant class
+            ax[i].scatter(noises[:,i], color='g',alpha=0.3)# alpha is           for transparency in the overlapped region 
+
+        ax[i].set_title(feature_names[i],fontsize=9)
+        ax[i].axes.get_xaxis().set_visible(False) # the x-axis co-ordinates are not so useful, as we just want to look how well separated the histograms are
+        ax[i].set_yticks(())
+        ax[0].legend([class_names[0], class_names[1]],loc='best',fontsize=8)
+    plt.tight_layout()# let's make good plots
+    plt.show()
+
+def plot_coefficients(classifier, feature_names, top_features=20):
+    from sklearn.feature_extraction.text import CountVectorizer
+    coef = classifier.coef_.ravel()
+    top_positive_coefficients = np.argsort(coef)[-top_features:]
+    top_negative_coefficients = np.argsort(coef)[:top_features]
+    top_coefficients = np.hstack([top_negative_coefficients, top_positive_coefficients])
+    # create plot
+    plt.figure(figsize=(15, 5))
+    colors = ['red' if c < 0 else 'blue' for c in coef[top_coefficients]]
+    plt.bar(np.arange(2 * top_features), coef[top_coefficients], color=colors)
+    feature_names = np.array(feature_names)
+    plt.xticks(np.arange(1, 1 + 2 * top_features), feature_names[top_coefficients], rotation=60, ha='right')
+    plt.show()
+
+
 def visualize_ml_result(data, label, classifier, class_name, step = 1, count = None):
     '''
     Only works for two features

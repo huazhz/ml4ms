@@ -31,7 +31,7 @@ from pandas import set_option
 
 from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm, create_directory
 from utils.featextractor import FeatureExtractor
-from utils.plot import visualize_ml_result
+from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features
 
 
 
@@ -56,7 +56,7 @@ def main():
     root_dir = 'F:\\datafolder\\dl4ms_data\\dataset'
 
 
-    archive_name = 'multiwell' # 'mp_s1' #  
+    archive_name = 'multiwell' # 
 
     dataset_name = 'noise_event_binary_dataset_B' 
 
@@ -100,7 +100,7 @@ def main():
         training_data = pd.read_csv(file_name, header= 0, index_col= False)
 
 
-    data = training_data
+    data = training_data.copy()
     for columname in data.columns:
         if data[columname].count() != len(data):
             loc = data[columname][data[columname].isnull().values==True].index.tolist()
@@ -112,7 +112,7 @@ def main():
     ## Training using Features Vector
 
     blind = training_data[training_data['FileName'] == '41532_140407_224100_1000']
-    training_data = training_data[training_data['FileName'] != '41532_140407_224100_1000']
+    #training_data = training_data[training_data['FileName'] != '41532_140407_224100_1000']
     training_data['FileName'] = training_data['FileName'].astype('category')
 
     print(training_data['FileName'].unique())
@@ -120,7 +120,7 @@ def main():
 
     class_colors = ['#196F3D', '#F5B041']
 
-    class_labels = ['Noise', 'Event']
+    class_labels = ['Event', 'Noise']
     #class_color_map is a dictionary that maps class labels
     #to their respective colors
     class_color_map = {}
@@ -160,23 +160,34 @@ def main():
     # #switch back to default matplotlib plot style
     # mpl.rcParams.update(inline_rc)
 
+    crossplot_features(data, ['Event', 'Noise'])
+
+
+    ## Train SVM classifier
+
     classifier_name = 'svm'
 
     classifier = create_classifier(classifier_name)
     classifier.set_data(training_data, class_labels)
-    classifier.visualize_binary_class('Peak Frequency', 'MFCC 1', 1)
+
+    
+    classifier.visualize_binary_class('Peak Frequency', 'Shannon Entropy', 1)
 
     classifier.split_dataset(classifier.scaled_features)
-    classifier.fit() 
+    classifier.fit(kernel = 'linear') 
 
     # C_range = np.array([.01, 1, 5, 10, 20, 50, 100, 1000, 5000, 10000])
     # gamma_range = np.array([0.0001, 0.001, 0.01, 0.1, 1, 10])
     # classifier.model_param_selection(C_range, gamma_range)
     # classifier.fit_with_selected_model_param(10, 'auto')
 
+
+
     print('\nTraining completed[OK]')
 
-    
+
+    # Plot coefficients
+    classifier.plot_coefficients()
 
 
 # This will actually run this code if called stand-alone

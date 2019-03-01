@@ -35,6 +35,7 @@ class ClassifierSVM:
         self.correct_class_labels = None
         self.feature_vector = None
         self.scaled_features = None
+        self.feature_names = None # type: list
 
         self.clf = None
 
@@ -48,6 +49,8 @@ class ClassifierSVM:
     def set_data(self, training_data, class_labels):
         self.training_data = training_data
         self.class_labels = class_labels
+
+        self.feature_names = training_data.columns.values.tolist()
 
         self._conditioning_data()
 
@@ -144,6 +147,24 @@ class ClassifierSVM:
 
         plt.show()
 
+    def plot_coefficients(self, top_features=20):
+        from sklearn.feature_extraction.text import CountVectorizer
+
+        feature_names = self.feature_names
+        coef = self.clf.coef_.ravel()
+        top_positive_coefficients = np.argsort(coef)[-top_features:]
+        top_negative_coefficients = np.argsort(coef)[:top_features]
+        top_coefficients = np.hstack([top_negative_coefficients, top_positive_coefficients])
+        # create plot
+        plt.figure(figsize=(15, 5))
+        colors = ['red' if c < 0 else 'blue' for c in coef[top_coefficients]]
+        plt.bar(np.arange(2 * top_features), coef[top_coefficients], color=colors)
+        feature_names = np.array(feature_names)
+        plt.xticks(np.arange(1, 1 + 2 * top_features), feature_names[top_coefficients], rotation=60, ha='right')
+        plt.tight_layout()
+        plt.show()
+
+
     def pca_2d(self):
         '''
         ## PCA analysis
@@ -157,6 +178,8 @@ class ClassifierSVM:
         pca_2d = pca.transform(self.feature_vector)
 
         return pca_2d
+
+    
 
     def fit(self, kernel = 'rbf', random_state = 0):        
         ## Training the SVM classifier
