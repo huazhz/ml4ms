@@ -36,6 +36,7 @@ class ClassifierSVM:
         self.feature_vector = None
         self.scaled_features = None
         self.feature_names = None # type: list
+        self.feature_labels = None 
 
         self.clf = None
 
@@ -58,8 +59,9 @@ class ClassifierSVM:
     def _conditioning_data(self):
         ## Conditioning the data set
         self.correct_class_labels = self.training_data['Class'].values
+        self.feature_labels = self.training_data['ClassLabels'].values
 
-        self.feature_vector = self.training_data.drop(['FileName','Class','ClassLabels'], axis=1)
+        self.feature_vector = self.training_data.drop(['FeatureID', 'FileName','Class','ClassLabels'], axis=1)
         self.feature_vector.describe()
 
         #feature_vectors.dropna(axis=0,how='any')   
@@ -165,20 +167,28 @@ class ClassifierSVM:
         plt.show()
 
 
-    def pca_2d(self):
+    def pca(self, n_components = 2):
         '''
         ## PCA analysis
         # 1. The PCA algorithm:
         # 2. takes as input a dataset with many features.
         # reduces that input to a smaller set of features (user-defined or algorithm-determined) 
         # by transforming the components of the feature set into what it considers as the main (principal) components.
+        Drawback of PCA is it’s almost impossible to tell how the initial features combined to form the principal components. 
         '''
         from sklearn.decomposition import PCA
-        pca = PCA(n_components=2).fit(self.feature_vector)
-        pca_2d = pca.transform(self.feature_vector)
+        
+        pca = PCA(n_components).fit(self.feature_vector)
+        X_pca = pca.transform(self.feature_vector)
 
-        return pca_2d
+        #measuring the variance ratio of the principal components
+        ex_variance=np.var(X_pca,axis=0)
+        ex_variance_ratio = ex_variance/np.sum(ex_variance)
+        print ('\nVariance ratio of the principal components: ', ex_variance_ratio) 
 
+        return X_pca
+
+  
     
 
     def fit(self, kernel = 'rbf', random_state = 0):        

@@ -31,7 +31,7 @@ from pandas import set_option
 
 from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm, create_directory
 from utils.featextractor import FeatureExtractor
-from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features
+from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features, crossplot_pca
 
 
 
@@ -160,7 +160,9 @@ def main():
     # #switch back to default matplotlib plot style
     # mpl.rcParams.update(inline_rc)
 
-    crossplot_features(data, ['Event', 'Noise'])
+    crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'] )
+    crossplot_features(training_data, ['Event', 'Noise'])
+    
 
 
     ## Train SVM classifier
@@ -170,24 +172,25 @@ def main():
     classifier = create_classifier(classifier_name)
     classifier.set_data(training_data, class_labels)
 
+    crossplot_pca(classifier.pca(3), classifier.feature_labels)
+
     
     classifier.visualize_binary_class('Peak Frequency', 'Shannon Entropy', 1)
 
     classifier.split_dataset(classifier.scaled_features)
     classifier.fit(kernel = 'linear') 
+    # Plot coefficients
+    classifier.plot_coefficients()
 
     # C_range = np.array([.01, 1, 5, 10, 20, 50, 100, 1000, 5000, 10000])
     # gamma_range = np.array([0.0001, 0.001, 0.01, 0.1, 1, 10])
     # classifier.model_param_selection(C_range, gamma_range)
     # classifier.fit_with_selected_model_param(10, 'auto')
 
-
-
     print('\nTraining completed[OK]')
 
 
-    # Plot coefficients
-    classifier.plot_coefficients()
+    
 
 
 # This will actually run this code if called stand-alone
