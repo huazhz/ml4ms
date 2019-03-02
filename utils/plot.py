@@ -141,10 +141,28 @@ def visualize_ml_result(classifier_name, features, feature_names, class_names, s
         from sklearn.neighbors import KNeighborsClassifier
         classifier = KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2)
 
-    elif classifier_name=='DT': 
+    elif classifier_name=='DecisionTree': 
 
         from sklearn.tree import DecisionTreeClassifier
         classifier = DecisionTreeClassifier(criterion = 'entropy', random_state = 0)
+
+    elif classifier_name=='LogisticRegression': 
+
+        from sklearn.linear_model import LogisticRegression
+        classifier = LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, max_iter=100, multi_class='ovr', n_jobs=1,
+          penalty='l2', random_state=None, solver='liblinear', tol=0.0001,
+          verbose=0, warm_start=False)
+    
+    elif classifier_name=='LDA': 
+
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+        classifier = LinearDiscriminantAnalysis()
+
+    elif classifier_name=='QDA': 
+
+        from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+        classifier = QuadraticDiscriminantAnalysis()
 
     data = features.loc[:, feature_names].values
     label = features['Class'].values

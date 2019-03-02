@@ -49,8 +49,24 @@ def create_classifier(classifier_name):
 
     elif classifier_name=='DecisionTree': 
 
-        from classifiers import decisiontree
-        return knn.ClassifierDecisionTree()
+        from classifiers import dtree
+        return dtree.ClassifierDecisionTree()
+    
+    elif classifier_name=='LogisticRegression':
+
+        from classifiers import logreg
+        return logreg.ClassifierLogisticRegression()
+
+    elif classifier_name=='LDA':
+
+        from classifiers import lda
+        return lda.ClassifierLDA()
+
+    elif classifier_name=='QDA':
+
+        from classifiers import qda
+        return qda.ClassifierQDA()
+
 
     
 
@@ -68,7 +84,7 @@ def main():
 
     dataset_name = 'noise_event_binary_dataset_A' 
 
-    classifier_name= 'SVM'
+    classifier_name= 'QDA'
 
     output_directory = os.path.join(root_dir, 'results', classifier_name, archive_name, dataset_name)
 
@@ -184,10 +200,10 @@ def main():
     classifier.fit() 
 
 
-    if classifier_name == 'svm': 
+    if classifier_name == 'SVM': 
     
         # Train SVM classifier        
-        classifier.visualize_binary_class('Peak Frequency', 'Shannon Entropy', 1)
+        classifier.visualize_ml_result(['Peak Frequency', 'Shannon Entropy'])
         
         classifier.fit(kernel = 'linear') 
         # Plot coefficients
