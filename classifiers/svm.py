@@ -32,11 +32,12 @@ class ClassifierSVM:
         
 
         self.training_accuracy = None
-        self.correct_class_labels = None
+        self.correct_class_labels = None # type: list of numeric
         self.feature_vector = None
         self.scaled_features = None
-        self.feature_names = None # type: list
-        self.feature_labels = None 
+        self.feature_names = None # type: list of dataframe column names
+        self.feature_labels = None # type: list of string
+        
 
         self.clf = None
 
@@ -51,7 +52,7 @@ class ClassifierSVM:
         self.training_data = training_data
         self.class_labels = class_labels
 
-        self.feature_names = training_data.columns.values.tolist()
+        self.feature_names = training_data.columns.values.tolist()[3:-1]
 
         self._conditioning_data()
 
@@ -186,7 +187,7 @@ class ClassifierSVM:
         ex_variance_ratio = ex_variance/np.sum(ex_variance)
         print ('\nVariance ratio of the principal components: ', ex_variance_ratio) 
 
-        return X_pca
+        return pca, X_pca
 
   
     
@@ -202,7 +203,7 @@ class ClassifierSVM:
         print('\n') 
         conf = confusion_matrix(self.y_test, predicted_labels)
         display_cm(conf, self.class_labels, hide_zeros=True)
-        print('\nClassification accuracy = %f' % accuracy(conf))
+        print('\nSVM classification accuracy = %f' % accuracy(conf))
 
     def model_param_selection(self, C, gamma):
         ## Model parameter selection

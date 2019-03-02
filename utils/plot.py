@@ -10,9 +10,32 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
 
-def crossplot_pca(pca, labels):
-    Xax = pca[:,0]
-    Yax = pca[:,1]
+def plot_correlations(features, feature_names):
+
+    import seaborn as sns
+    s=sns.heatmap(features[feature_names].corr(),cmap='coolwarm') 
+    s.set_yticklabels(s.get_yticklabels(),rotation=30,fontsize=7)
+    s.set_xticklabels(s.get_xticklabels(),rotation=30,fontsize=7)
+    plt.show()
+
+def heatplot_pca(pca, feature_names):
+    '''
+    Designed for 3 components
+    These principal components are calculated only from features and no information from classes are considered. 
+    So PCA is unsupervised method and it’s difficult to interpret the two axes as they are some complex mixture 
+    of the original features.
+    We can make a heat-plot to see how the features mixed up to create the components.
+    '''
+    plt.matshow(pca.components_,cmap='viridis')
+    plt.yticks([0,1,2],['1st Comp','2nd Comp','3rd Comp'],fontsize=10)
+    plt.colorbar()
+    plt.xticks(range(len(feature_names)), feature_names,rotation=65,ha='left')
+    plt.tight_layout()
+    plt.show()#
+
+def crossplot_pca(X_pca, labels):
+    Xax = X_pca[:,0]
+    Yax = X_pca[:,1]
     class_names = np.unique(labels)
     cdict={0:'red',1:'green'}
     labl={0:class_names[0],1:class_names[1]}
@@ -53,8 +76,8 @@ def crossplot_features(features, class_names, display_type = 'histogram'):
     event = features[features['Class'] == 1]
     noise = features[features['Class'] == 2]
 
-    events = event.drop(['Class','FileName','FeatureID', 'ClassLabels'],axis=1).as_matrix()
-    noises = noise.drop(['Class','FileName','FeatureID', 'ClassLabels'],axis=1).as_matrix()
+    events = event.drop(['Class','FileName','FeatureID', 'ClassLabels'],axis=1).values
+    noises = noise.drop(['Class','FileName','FeatureID', 'ClassLabels'],axis=1).values
 
     dataset = features.drop(['Class','FileName','FeatureID','ClassLabels'],axis=1)
     #data = features.drop(['Class','FileName','FeatureID','ClassLabels'],axis=1).values

@@ -31,7 +31,7 @@ from pandas import set_option
 
 from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm, create_directory
 from utils.featextractor import FeatureExtractor
-from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features, crossplot_pca
+from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features, crossplot_pca, heatplot_pca, plot_correlations
 
 
 
@@ -42,6 +42,12 @@ def create_classifier(classifier_name):
         from classifiers import svm        
 
         return svm.ClassifierSVM()
+    
+    elif classifier_name=='knn': 
+
+        from classifiers import knn        
+
+        return knn.ClassifierKNN()
 
     
 
@@ -55,24 +61,18 @@ def main():
 
     root_dir = 'F:\\datafolder\\dl4ms_data\\dataset'
 
-
     archive_name = 'multiwell' # 
 
     dataset_name = 'noise_event_binary_dataset_B' 
 
-    classifier_name= 'svm'
-
-
+    classifier_name= 'knn'
 
     output_directory = os.path.join(root_dir, 'results', classifier_name, archive_name, dataset_name)
 
     create_directory(output_directory)
 
 
-
-    print('\nTraining is in process...[Wait]\n')
-
-    print('\nMethod: ',archive_name, dataset_name, classifier_name, '\n')
+    print('\nInfo: ',archive_name, dataset_name, classifier_name, '\n')
 
 
     file_name = os.path.join(root_dir,'archives', archive_name, dataset_name, dataset_name +'.csv')
@@ -109,7 +109,7 @@ def main():
 
 
 
-    ## Training using Features Vector
+    ## Features Vector Conditioning
 
     blind = training_data[training_data['FileName'] == '41532_140407_224100_1000']
     #training_data = training_data[training_data['FileName'] != '41532_140407_224100_1000']
@@ -138,9 +138,6 @@ def main():
     # training_data.dropna(axis=0,how='any') #drop all rows that have any NaN values
     #training_data.fillna(0)
 
-
-
-
     #count the number of unique entries for each class, sort them by
     #class number (instead of by number of entries)
     class_counts = training_data['Class'].value_counts().sort_index()
@@ -160,32 +157,54 @@ def main():
     # #switch back to default matplotlib plot style
     # mpl.rcParams.update(inline_rc)
 
-    crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'] )
+    
+    
+    ## Visualize dataset and gain insight
+    crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'])
     crossplot_features(training_data, ['Event', 'Noise'])
+    plot_correlations(training_data, ['Mean', 'Peak Frequency', 'Shannon Entropy', 'MFCC 1'])
+
+    feature_names = training_data.columns.values.tolist()[3:-1]
+
+    plot_correlations(training_data, feature_names[0:10])
+    plot_correlations(training_data, feature_names[11:25])
+    plot_correlations(training_data, feature_names[26:46])
+    plot_correlations(training_data, feature_names)
     
+    
+    
+    ## Train Classifier
 
-
-    ## Train SVM classifier
-
-    classifier_name = 'svm'
-
+    print('Training ['+ classifier_name + '] classifer in process[Waiting...]')
     classifier = create_classifier(classifier_name)
-    classifier.set_data(training_data, class_labels)
-
-    crossplot_pca(classifier.pca(3), classifier.feature_labels)
-
-    
-    classifier.visualize_binary_class('Peak Frequency', 'Shannon Entropy', 1)
-
+    classifier.set_data(training_data, class_labels) 
     classifier.split_dataset(classifier.scaled_features)
-    classifier.fit(kernel = 'linear') 
-    # Plot coefficients
-    classifier.plot_coefficients()
+    classifier.fit()
 
-    # C_range = np.array([.01, 1, 5, 10, 20, 50, 100, 1000, 5000, 10000])
-    # gamma_range = np.array([0.0001, 0.001, 0.01, 0.1, 1, 10])
-    # classifier.model_param_selection(C_range, gamma_range)
-    # classifier.fit_with_selected_model_param(10, 'auto')
+    # PCA analysis
+    print('\nPCA analysis results:\n')
+    crossplot_pca(classifier.pca(3)[1], classifier.feature_labels)
+    heatplot_pca(classifier.pca(3)[0], classifier.feature_names)
+
+    classifier.split_dataset(classifier.pca(3)[1])
+    classifier.fit() 
+
+
+    if classifier_name == 'svm': 
+    
+        # Train SVM classifier        
+        classifier.visualize_binary_class('Peak Frequency', 'Shannon Entropy', 1)
+        
+        classifier.fit(kernel = 'linear') 
+        # Plot coefficients
+        classifier.plot_coefficients()
+
+        # C_range = np.array([.01, 1, 5, 10, 20, 50, 100, 1000, 5000, 10000])
+        # gamma_range = np.array([0.0001, 0.001, 0.01, 0.1, 1, 10])
+        # classifier.model_param_selection(C_range, gamma_range)
+        # classifier.fit_with_selected_model_param(10, 'auto')
+        
+
 
     print('\nTraining completed[OK]')
 
