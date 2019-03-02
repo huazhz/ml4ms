@@ -32,7 +32,7 @@ class ClassifierDecisionTree:
         self.clf_name = 'DecisionTree'
 
         self.training_accuracy = None
-        self.correct_class_labels = None # type: list of numeric
+        self.numeric_class_labels = None # type: list of numeric
         self.feature_vector = None
         self.scaled_features = None
         self.feature_names = None # type: list of dataframe column names
@@ -59,7 +59,7 @@ class ClassifierDecisionTree:
 
     def _conditioning_data(self):
         ## Conditioning the data set
-        self.correct_class_labels = self.training_data['Class'].values
+        self.numeric_class_labels = self.training_data['Class'].values
         self.feature_labels = self.training_data['ClassLabels'].values
 
         self.feature_vector = self.training_data.drop(['FeatureID', 'FileName','Class','ClassLabels'], axis=1)
@@ -77,7 +77,7 @@ class ClassifierDecisionTree:
     
     def split_dataset(self, features, test_size = 0.2, random_state=42):
 
-        X_train, X_test, y_train, y_test = train_test_split(features, self.correct_class_labels, test_size=0.2, random_state=42)
+        X_train, X_test, y_train, y_test = train_test_split(features, self.numeric_class_labels, test_size=0.2, random_state=42)
 
         self.X_train = X_train.copy()
         self.y_train = y_train.copy()
@@ -115,13 +115,16 @@ class ClassifierDecisionTree:
         ## Training the decision tree classifier        
         self.clf = tree.DecisionTreeClassifier(criterion = criterion,  random_state = random_state)
         self.clf.fit(self.X_train, self.y_train)
+    
+    def predict(self):
         predicted_labels = self.clf.predict(self.X_test)
-
         
         print('\n') 
         conf = confusion_matrix(self.y_test, predicted_labels)
         display_cm(conf, self.class_labels, hide_zeros=True)
         print('\nDecisionTree classification accuracy = %f' % accuracy(conf))
-
+        
+        return predicted_labels
+    
     
 

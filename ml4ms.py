@@ -31,7 +31,8 @@ from pandas import set_option
 
 from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm, create_directory
 from utils.featextractor import FeatureExtractor
-from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features, crossplot_pca, heatplot_pca, plot_correlations
+from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features,\
+     crossplot_pca, heatplot_pca, plot_correlations, compare_classifiers
 
 
 
@@ -80,9 +81,11 @@ def main():
 
     root_dir = 'F:\\datafolder\\dl4ms_data\\dataset'
 
-    archive_name = 'multiwell' # 
+    archive_name = 'UTS' # 
 
-    dataset_name = 'noise_event_binary_dataset_A' 
+    dataset_name = 'TX_P_DEMO_256' #'noise_event_binary_dataset_B' 
+
+    segment_size = 256
 
     classifier_name= 'QDA'
 
@@ -91,11 +94,13 @@ def main():
     create_directory(output_directory)
 
 
-    print('\nInfo: ',archive_name, dataset_name, classifier_name, '\n')
+    print('\nInfo: ',archive_name, dataset_name, segment_size, classifier_name, '\n')
 
 
     file_name = os.path.join(root_dir,'archives', archive_name, dataset_name, dataset_name +'.csv')
-    column_name = ['ID', 'FileName', 'Class'] + list(range(512))
+    
+    
+    column_name = ['ID', 'FileName', 'Class'] + list(range(segment_size))
     hd = 0 # .csv has header
     datasets_df = load_csv(file_name, hd, column_name)
 
@@ -107,9 +112,9 @@ def main():
         extractor.set_dataset(datasets_df)
 
         fs = 500 # unit is Hz 
-        window_length = 512  # a wavelength is usually 30 samples, we choose 2*wavelength
+        window_length = segment_size  # a wavelength is usually 30 samples, we choose 2*wavelength
         overlap_length = int(window_length/2)
-        signal_length = 512
+        signal_length = segment_size
 
         extractor.extract_features(fs, window_length, overlap_length, signal_length)
         extractor.save_features(file_name)
@@ -164,7 +169,7 @@ def main():
 
     
     
-    ## Visualize dataset and gain insight
+    # ## Visualize dataset and gain insight
     # crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'])
     # crossplot_features(training_data, ['Event', 'Noise'])
     # plot_correlations(training_data, ['Mean', 'Peak Frequency', 'Shannon Entropy', 'MFCC 1'])
@@ -176,15 +181,32 @@ def main():
     # plot_correlations(training_data, feature_names[26:46])
     # plot_correlations(training_data, feature_names)
     
-    
-    
-    ## Train Classifier
+    ## Compare different classifiers, including 
+        # ["Nearest Neighbors", "Linear SVM", "RBF SVM", "Gaussian Process",
+        # "Decision Tree", "Random Forest", "Neural Net", "AdaBoost",
+        # "Naive Bayes", "QDA"]
 
+    numeric_class_labels = training_data['Class'].values
+    feature_labels = training_data['ClassLabels'].values
+
+    feature_vector = training_data.drop(['FeatureID', 'FileName','Class','ClassLabels'], axis=1)
+    feature_vector.describe()
+
+    count = 300
+    dataset = [(feature_vector[['Energy', 'Spectral Spread']][0:count], numeric_class_labels[0:count]),
+                (feature_vector[['Peak Frequency', 'STALTA']][0:count], numeric_class_labels[0:count]),
+                (feature_vector[['Variance', 'Kurtosis']][0:count], numeric_class_labels[0:count])]
+    
+    compare_classifiers(dataset)
+
+
+    ## Train Classifier
     print('Training ['+ classifier_name + '] classifer in process[Waiting...]')
     classifier = create_classifier(classifier_name)
     classifier.set_data(training_data, class_labels) 
     classifier.split_dataset(classifier.scaled_features)
     classifier.fit()
+    classifier.predict()
     feature_names = ['Peak Frequency', 'Shannon Entropy']
 
     # visualize result
@@ -198,6 +220,7 @@ def main():
 
     classifier.split_dataset(classifier.pca(3)[1])
     classifier.fit() 
+    classifier.predict()
 
 
     if classifier_name == 'SVM': 
@@ -206,6 +229,7 @@ def main():
         classifier.visualize_ml_result(['Peak Frequency', 'Shannon Entropy'])
         
         classifier.fit(kernel = 'linear') 
+        classifier.predict()
         # Plot coefficients
         classifier.plot_coefficients()
 

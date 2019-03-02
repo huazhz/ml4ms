@@ -13,7 +13,7 @@ from scipy import stats
 import pandas as pd
 
 from .sigproc import (mad, peakfreq_from_fft, spectralRollOff, spectralCentroidAndSpread, chromaFeatures, chromaFeaturesInit, rssq,\
-    peak2rms, rms, range_bytes, energy, zcr_2, zcr)
+    peak2rms, rms, range_bytes, energy, zcr_2, zcr, recursive_sta_lta)
 from .entropy import spectral_entropy, sample_entropy, shannon_entropy
 from .speech_features import mfcc
 
@@ -93,9 +93,8 @@ class FeatureExtractor:
         spectralRolloffValue = [] # the frequency below which 85% of the total spectral energy lies
         rmsValue = [] # root-mean-square energy
         peakFreqValue = [] # peak frequency
-        dominantFreqValue = []
-        dominantFreqMag = []
-        dominantFreqRatio = []
+        staltaValue = [] # STA/LTA
+        
         
         
         # MFCC - Mel Frequency Cepstral Coefficients, form a cepstral representation where the frequency bands are not linear but distributed according to the mel-scale
@@ -149,7 +148,7 @@ class FeatureExtractor:
         print("Extracting features in progress...\n")
         start = time.clock()
         for i in range(nsignal):
-            print('Extracting features for #(%d) segment' %(i))
+            print('Extracting features for #(%d) segment' %(i+1))
             for ind, val in enumerate(wins):
 
                 
@@ -185,7 +184,14 @@ class FeatureExtractor:
                 
                 
                 
-                peakFreqValue.append(peakfreq_from_fft(signal, samplerate)) 
+                peakFreqValue.append(peakfreq_from_fft(signal, samplerate))
+                #print(peakFreqValue[-1])
+                staltaValue.append(max(recursive_sta_lta(signal, 40, 80))) 
+                # print(max(recursive_sta_lta(signal, 40, 80)))
+                # import matplotlib.pyplot as plt
+                # plt.plot(recursive_sta_lta(signal, 40, 80))
+                # plt.plot(signal)
+                # plt.show()
                 
 
                 # MFCC
@@ -230,6 +236,8 @@ class FeatureExtractor:
 
         feature_dict = {'Class': signalClass,
                             'FileName': fileName,
+                            'Peak Frequency': peakFreqValue,
+                            'STALTA': staltaValue,
                             'Mean': meanValue,
                             'Median': medianValue,
                             'Variance': varianceValue,
@@ -251,8 +259,7 @@ class FeatureExtractor:
                             'Spectral Centroid': spectralCentroidValue,
                             'Spectral Spread': spectralSpreadValue,
                             'Spectral Rolloff': spectralRolloffValue,
-                            'RMS': rmsValue,
-                            'Peak Frequency': peakFreqValue,
+                            'RMS': rmsValue,                            
                             'MFCC 1': mfcc1,
                             'MFCC 2': mfcc2,
                             'MFCC 3': mfcc3,

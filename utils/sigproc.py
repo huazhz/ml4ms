@@ -70,7 +70,7 @@ def peakfreq_from_fft(sig, fs):
     f = rfft(windowed)
 
     # Find the peak and interpolate to get a more accurate peak
-    i = argmax(abs(f))  # Just use this for less-accurate, naive version
+    i = argmax(abs(f)) - 1 # Just use this for less-accurate, naive version
     true_i = parabolic(log(abs(f)), i)[0]
 
     # Convert to equivalent frequency
@@ -171,3 +171,79 @@ def chromaFeatures(x, fs, nChroma, nFreqsPerChroma):
 
 
     return chromaNames, finalC
+
+def recursive_sta_lta(a, nsta, nlta):
+
+    """
+
+    Recursive STA/LTA written in Python.
+
+    .. note::
+
+        There exists a faster version of this trigger wrapped in C
+
+        called :func:`~obspy.signal.trigger.recursive_sta_lta` in this module!
+
+    :type a: NumPy :class:`~numpy.ndarray`
+
+    :param a: Seismic Trace
+
+    :type nsta: int
+
+    :param nsta: Length of short time average window in samples
+
+    :type nlta: int
+
+    :param nlta: Length of long time average window in samples
+
+    :rtype: NumPy :class:`~numpy.ndarray`
+
+    :return: Characteristic function of recursive STA/LTA
+
+    .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
+
+    """
+
+    try:
+
+        a = a.tolist()
+
+    except Exception:
+
+        pass
+
+    ndat = len(a)
+
+    # compute the short time average (STA) and long time average (LTA)
+
+    # given by Evans and Allen
+
+    csta = 1. / nsta
+
+    clta = 1. / nlta
+
+    sta = 0.
+
+    lta = 1e-99  # avoid zero division
+
+    charfct = [0.0] * len(a)
+
+    icsta = 1 - csta
+
+    iclta = 1 - clta
+
+    for i in range(1, ndat):
+
+        sq = a[i] ** 2
+
+        sta = csta * sq + icsta * sta
+
+        lta = clta * sq + iclta * lta
+
+        charfct[i] = sta / lta
+
+        if i < nlta:
+
+            charfct[i] = 0.
+
+    return np.array(charfct)
