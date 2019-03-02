@@ -7,7 +7,7 @@
 
 '''
 
-# k-NN
+# decision tree
 import numpy as np 
 import pandas as pd 
 import time 
@@ -17,7 +17,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
-from sklearn import neighbors
+from sklearn import tree
 from sklearn.metrics import confusion_matrix
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
@@ -25,11 +25,11 @@ from sklearn.model_selection import train_test_split
 from utils.utils import accuracy
 from utils.io import display_cm
 
-class ClassifierKNN:
+class ClassifierDecisionTree:
 
     def __init__(self):      
         
-        self.clf_name = 'K-NN'
+        self.clf_name = 'DecisionTree'
 
         self.training_accuracy = None
         self.correct_class_labels = None # type: list of numeric
@@ -110,10 +110,10 @@ class ClassifierKNN:
   
     
 
-    def fit(self, n_neighbors = 5, metric = 'minkowski', p = 2):        
+    def fit(self, criterion = 'entropy', random_state = 0):        
         
         ## Training the k-NN classifier        
-        self.clf = neighbors.KNeighborsClassifier(n_neighbors = n_neighbors, metric = metric, p = p)
+        self.clf = tree.DecisionTreeClassifier(criterion = criterion,  random_state = random_state)
         self.clf.fit(self.X_train, self.y_train)
         predicted_labels = self.clf.predict(self.X_test)
 
@@ -121,7 +121,7 @@ class ClassifierKNN:
         print('\n') 
         conf = confusion_matrix(self.y_test, predicted_labels)
         display_cm(conf, self.class_labels, hide_zeros=True)
-        print('\nk-NN classification accuracy = %f' % accuracy(conf))
+        print('\nDecisionTree classification accuracy = %f' % accuracy(conf))
 
     
 

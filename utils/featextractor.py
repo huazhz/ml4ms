@@ -283,9 +283,19 @@ class FeatureExtractor:
         index = pd.Index(data= np.int_(np.linspace(1, n_win * nsignal,num = n_win * nsignal)),name="FeatureID")
 
         self.feature_data = pd.DataFrame(feature_dict, index=index)
+        
+        class_labels = ['Event', 'Noise']
+        self.feature_data.loc[:,'ClassLabels'] = self.feature_data.apply(lambda row: label_class(row, class_labels), axis=1)
 
        
 
         elapsed = (time.clock() - start)
         print("Extracting features completed[OK].\n")
         print("Time used for extracting features: ",elapsed, '\n')
+
+def label_class(row, labels):
+    ind = row['Class'] -1
+    #print(ind)
+    return labels[ind]
+        
+    

@@ -26,6 +26,7 @@ def heatplot_pca(pca, feature_names):
     of the original features.
     We can make a heat-plot to see how the features mixed up to create the components.
     '''
+    
     plt.matshow(pca.components_,cmap='viridis')
     plt.yticks([0,1,2],['1st Comp','2nd Comp','3rd Comp'],fontsize=10)
     plt.colorbar()
@@ -120,33 +121,89 @@ def plot_coefficients(classifier, feature_names, top_features=20):
     plt.show()
 
 
-def visualize_ml_result(data, label, classifier, class_name, step = 1, count = None):
+def visualize_ml_result(classifier_name, features, feature_names, class_names, step = 0.01, count = 50):
     '''
     Only works for two features
     '''
 
-    
-    if count == None:        
-        X_set, y_set = data, label
-    elif  len(label) < count:
-        X_set, y_set = data, label
-    else:
-        X_set, y_set = data[:50,:], label[:50]
+    if len(feature_names) != 2:
+        print('Error!')
+        return
 
-    X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = step),
-                        np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = step))
-    plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
-                alpha = 0.75, cmap = ListedColormap(('red', 'green')))
-    plt.xlim(X1.min(), X1.max())
-    plt.ylim(X2.min(), X2.max())
-    for i, j in enumerate(np.unique(y_set)):
-        print(i,j)
-        plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
-                    c = ListedColormap(('red', 'green'))(i), label = j)
-    plt.title('SVM (Training set)')
-    plt.xlabel(class_name[0])
-    plt.ylabel(class_name[1])
-    plt.legend()
+    if classifier_name=='SVM': 
+
+        from sklearn.svm import SVC
+        classifier = SVC(kernel = 'rbf', random_state = 0)       
+        
+    
+    elif classifier_name=='KNN': 
+
+        from sklearn.neighbors import KNeighborsClassifier
+        classifier = KNeighborsClassifier(n_neighbors = 5, metric = 'minkowski', p = 2)
+
+    elif classifier_name=='DT': 
+
+        from sklearn.tree import DecisionTreeClassifier
+        classifier = DecisionTreeClassifier(criterion = 'entropy', random_state = 0)
+
+    data = features.loc[:, feature_names].values
+    label = features['Class'].values
+
+    from sklearn.model_selection import train_test_split
+    X_train, X_test, y_train, y_test = train_test_split(data, label, test_size = 0.2, random_state = 0)
+
+    from sklearn.preprocessing import StandardScaler
+    sc = StandardScaler()
+    X_train = sc.fit_transform(X_train)
+    X_test = sc.transform(X_test)
+
+    classifier.fit(X_train, y_train)
+
+    if count != None and len(label) > count:        
+        X_train_set = X_train[:count,:].copy()
+        y_train_set = y_train[:count].copy()
+        X_test_set = X_test[:count,:].copy()
+        y_test_set = y_test[:count].copy()
+    
+    else:
+        X_train_set = X_train.copy()
+        y_train_set = y_train.copy()
+        X_test_set = X_test.copy()
+        y_test_set = y_test.copy()
+    
+    plt.figure(1)
+
+    for n in range(2):
+
+        if n == 0:
+            set_name = '(Training Set)'            
+            X = X_train_set
+            y = y_train_set
+        else:
+            set_name = '(Test Set)'            
+            X = X_test_set
+            y = y_test_set
+
+        plt.subplot(1,2, n+1)
+
+        X1, X2 = np.meshgrid(np.arange(start = X[:, 0].min() - 1, stop = X[:, 0].max() + 1, step = step),
+                            np.arange(start = X[:, 1].min() - 1, stop = X[:, 1].max() + 1, step = step))
+        # plt.contourf(X1, X2, classifier.clf.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+        #             alpha = 0.75, cmap = ListedColormap(('red', 'green')))
+        plt.contourf(X1, X2, classifier.predict(np.c_[X1.ravel(), X2.ravel()]).reshape(X1.shape),
+                    alpha = 0.75, cmap = ListedColormap(('red', 'green'))) # alternative code
+
+        plt.xlim(X1.min(), X1.max())
+        plt.ylim(X2.min(), X2.max())
+        for i, j in enumerate(np.unique(y)):
+            print(i,j)
+            plt.scatter(X[y == j, 0], X[y == j, 1],
+                        c = ListedColormap(('red', 'green'))(i), label = j)
+        plt.title(classifier_name+' Classification '+set_name)
+        plt.xlabel(class_names[0])
+        plt.ylabel(class_names[1])
+        plt.legend()
+
     plt.show()
 
 def plot_axis(ax, x, y, title):

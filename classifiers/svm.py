@@ -28,8 +28,8 @@ from utils.io import display_cm
 class ClassifierSVM:
 
     def __init__(self):
-        
-        
+
+        self.clf_name = 'SVM'        
 
         self.training_accuracy = None
         self.correct_class_labels = None # type: list of numeric
@@ -84,11 +84,13 @@ class ClassifierSVM:
         self.X_test = X_test.copy()
         self.y_test = y_test.copy()
 
-    def visualize_binary_class(self, class1, class2,  h = 1, count = None):
+        return X_train, X_test, y_train, y_test
+
+    def visualize_ml_result(self, feature_names,  h = 1, count = 50):
 
         import matplotlib.pyplot as plt
 
-        data = self.training_data.loc[:, [class1, class2]].values
+        data = self.training_data.loc[:, feature_names].values
         label = self.training_data['Class'].values
 
         scaler = preprocessing.StandardScaler().fit(data)
@@ -140,8 +142,8 @@ class ClassifierSVM:
 
             # Plot also the training points
             plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Paired)
-            plt.xlabel(class1)
-            plt.ylabel(class2)
+            plt.xlabel(feature_names[0])
+            plt.ylabel(feature_names[1])
             plt.xlim(xx.min(), xx.max())
             plt.ylim(yy.min(), yy.max())
             plt.xticks(())

@@ -37,17 +37,20 @@ from utils.plot import visualize_ml_result, plot_coefficients, crossplot_feature
 
 def create_classifier(classifier_name):
 
-    if classifier_name=='svm': 
+    if classifier_name=='SVM': 
 
-        from classifiers import svm        
-
+        from classifiers import svm
         return svm.ClassifierSVM()
     
-    elif classifier_name=='knn': 
+    elif classifier_name=='KNN': 
 
-        from classifiers import knn        
-
+        from classifiers import knn
         return knn.ClassifierKNN()
+
+    elif classifier_name=='DecisionTree': 
+
+        from classifiers import decisiontree
+        return knn.ClassifierDecisionTree()
 
     
 
@@ -63,9 +66,9 @@ def main():
 
     archive_name = 'multiwell' # 
 
-    dataset_name = 'noise_event_binary_dataset_B' 
+    dataset_name = 'noise_event_binary_dataset_A' 
 
-    classifier_name= 'knn'
+    classifier_name= 'SVM'
 
     output_directory = os.path.join(root_dir, 'results', classifier_name, archive_name, dataset_name)
 
@@ -99,41 +102,28 @@ def main():
     else:
         training_data = pd.read_csv(file_name, header= 0, index_col= False)
 
-
+    ## Features Vector Conditioning
+    print(training_data.describe())
     data = training_data.copy()
     for columname in data.columns:
         if data[columname].count() != len(data):
             loc = data[columname][data[columname].isnull().values==True].index.tolist()
             print('Column Name："{}", Row #{} has null value.'.format(columname,loc))
 
-
-
-
-    ## Features Vector Conditioning
-
-    blind = training_data[training_data['FileName'] == '41532_140407_224100_1000']
+    
+    #blind = training_data[training_data['FileName'] == '41532_140407_224100_1000']
     #training_data = training_data[training_data['FileName'] != '41532_140407_224100_1000']
     training_data['FileName'] = training_data['FileName'].astype('category')
-
     print(training_data['FileName'].unique())
 
-
     class_colors = ['#196F3D', '#F5B041']
-
     class_labels = ['Event', 'Noise']
     #class_color_map is a dictionary that maps class labels
     #to their respective colors
     class_color_map = {}
     for ind, label in enumerate(class_labels):
-        class_color_map[label] = class_colors[ind]
-
-    def label_class(row, labels):
-        ind = row['Class'] -1
-        #print(ind)
-        return labels[ind]
-        
-    training_data.loc[:,'ClassLabels'] = training_data.apply(lambda row: label_class(row, class_labels), axis=1)
-    print(training_data.describe())
+        class_color_map[label] = class_colors[ind]  
+    
 
     # training_data.dropna(axis=0,how='any') #drop all rows that have any NaN values
     #training_data.fillna(0)
@@ -141,9 +131,8 @@ def main():
     #count the number of unique entries for each class, sort them by
     #class number (instead of by number of entries)
     class_counts = training_data['Class'].value_counts().sort_index()
-    #use facies labels to index each count
+    #use class labels to index each count
     class_counts.index = class_labels
-
     class_counts.plot(kind='bar',color=class_colors, 
                     title='Distribution of Training Data by Class')
     print(class_counts)
@@ -160,16 +149,16 @@ def main():
     
     
     ## Visualize dataset and gain insight
-    crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'])
-    crossplot_features(training_data, ['Event', 'Noise'])
-    plot_correlations(training_data, ['Mean', 'Peak Frequency', 'Shannon Entropy', 'MFCC 1'])
+    # crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'])
+    # crossplot_features(training_data, ['Event', 'Noise'])
+    # plot_correlations(training_data, ['Mean', 'Peak Frequency', 'Shannon Entropy', 'MFCC 1'])
 
-    feature_names = training_data.columns.values.tolist()[3:-1]
+    # feature_names = training_data.columns.values.tolist()[3:-1]
 
-    plot_correlations(training_data, feature_names[0:10])
-    plot_correlations(training_data, feature_names[11:25])
-    plot_correlations(training_data, feature_names[26:46])
-    plot_correlations(training_data, feature_names)
+    # plot_correlations(training_data, feature_names[0:10])
+    # plot_correlations(training_data, feature_names[11:25])
+    # plot_correlations(training_data, feature_names[26:46])
+    # plot_correlations(training_data, feature_names)
     
     
     
@@ -180,6 +169,11 @@ def main():
     classifier.set_data(training_data, class_labels) 
     classifier.split_dataset(classifier.scaled_features)
     classifier.fit()
+    feature_names = ['Peak Frequency', 'Shannon Entropy']
+
+    # visualize result
+    visualize_ml_result(classifier_name, training_data, feature_names, class_labels, count = None)
+  
 
     # PCA analysis
     print('\nPCA analysis results:\n')
