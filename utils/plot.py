@@ -15,7 +15,8 @@ def plot_correlations(features, feature_names):
     import seaborn as sns
     s=sns.heatmap(features[feature_names].corr(),cmap='coolwarm') 
     s.set_yticklabels(s.get_yticklabels(),rotation=30,fontsize=7)
-    s.set_xticklabels(s.get_xticklabels(),rotation=30,fontsize=7)
+    s.set_xticklabels(s.get_xticklabels(),rotation=65,fontsize=7)
+    plt.tight_layout()
     plt.show()
 
 def heatplot_pca(pca, feature_names):

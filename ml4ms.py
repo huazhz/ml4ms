@@ -83,11 +83,11 @@ def main():
 
     archive_name = 'UTS' # 
 
-    dataset_name = 'TX_P_DEMO_256' #'noise_event_binary_dataset_B' 
+    dataset_name = 'MP_NOISE_P_256'#'TX_DEMO_P_256' 
 
-    segment_size = 256
+    segment_size = int(dataset_name.split('_')[-1])
 
-    classifier_name= 'QDA'
+    classifier_name= 'SVM'
 
     output_directory = os.path.join(root_dir, 'results', classifier_name, archive_name, dataset_name)
 
@@ -169,13 +169,14 @@ def main():
 
     
     
-    # ## Visualize dataset and gain insight
+    ## Visualize dataset and gain insight
     # crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'])
-    # crossplot_features(training_data, ['Event', 'Noise'])
+    crossplot_features(training_data, ['Event', 'Noise'])
+    
+
+    feature_names = training_data.columns.values.tolist()[3:-1]
+
     # plot_correlations(training_data, ['Mean', 'Peak Frequency', 'Shannon Entropy', 'MFCC 1'])
-
-    # feature_names = training_data.columns.values.tolist()[3:-1]
-
     # plot_correlations(training_data, feature_names[0:10])
     # plot_correlations(training_data, feature_names[11:25])
     # plot_correlations(training_data, feature_names[26:46])
@@ -196,6 +197,8 @@ def main():
     dataset = [(feature_vector[['Energy', 'Spectral Spread']][0:count], numeric_class_labels[0:count]),
                 (feature_vector[['Peak Frequency', 'STALTA']][0:count], numeric_class_labels[0:count]),
                 (feature_vector[['Variance', 'Kurtosis']][0:count], numeric_class_labels[0:count])]
+    
+    
     
     compare_classifiers(dataset)
 
