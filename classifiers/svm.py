@@ -86,88 +86,7 @@ class ClassifierSVM:
 
         return X_train, X_test, y_train, y_test
 
-    def visualize_ml_result(self, feature_names,  h = 1, count = 50):
-
-        import matplotlib.pyplot as plt
-
-        data = self.training_data.loc[:, feature_names].values
-        label = self.training_data['Class'].values
-
-        scaler = preprocessing.StandardScaler().fit(data)
-        scaled_features = scaler.transform(data)
-
-        X_train, X_test, y_train, y_test = train_test_split(scaled_features, label, test_size=0.2, random_state=42)
-
-        if count != None and len(label) > count:        
-            X = X_train[:count,:].copy()
-            y = y_train[:count].copy()
-        
-        else:
-            X = X_train.copy()
-            y = y_train.copy()
-
-        # we create an instance of SVM and fit out data. We do not scale our
-        # data since we want to plot the support vectors
-        C = 1.0  # SVM regularization parameter
-        svc = svm.SVC(kernel='linear', C=C).fit(X, y)
-        rbf_svc = svm.SVC(kernel='rbf', gamma=0.7, C=C).fit(X, y)
-        poly_svc = svm.SVC(kernel='poly', degree=3, C=C).fit(X, y)
-        lin_svc = svm.LinearSVC(C=C).fit(X, y)
-
-        # create a mesh to plot in
-        
-        x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
-        y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
-        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
-                            np.arange(y_min, y_max, h))
-
-        # title for the plots
-        titles = ['SVC with linear kernel',
-                'LinearSVC (linear kernel)',
-                'SVC with RBF kernel',
-                'SVC with polynomial (degree 3) kernel']
-
-
-        for i, clf in enumerate((svc, lin_svc, rbf_svc, poly_svc)):
-            # Plot the decision boundary. For that, we will assign a color to each
-            # point in the mesh [x_min, m_max]x[y_min, y_max].
-            plt.subplot(2, 2, i + 1)
-            plt.subplots_adjust(wspace=0.4, hspace=0.4)
-
-            Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
-
-            # Put the result into a color plot
-            Z = Z.reshape(xx.shape)
-            plt.contourf(xx, yy, Z, cmap=plt.cm.Paired, alpha=0.5)
-
-            # Plot also the training points
-            plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Paired)
-            plt.xlabel(feature_names[0])
-            plt.ylabel(feature_names[1])
-            plt.xlim(xx.min(), xx.max())
-            plt.ylim(yy.min(), yy.max())
-            plt.xticks(())
-            plt.yticks(())
-            plt.title(titles[i])
-
-        plt.show()
-
-    def plot_coefficients(self, top_features=20):
-        from sklearn.feature_extraction.text import CountVectorizer
-
-        feature_names = self.feature_names
-        coef = self.clf.coef_.ravel()
-        top_positive_coefficients = np.argsort(coef)[-top_features:]
-        top_negative_coefficients = np.argsort(coef)[:top_features]
-        top_coefficients = np.hstack([top_negative_coefficients, top_positive_coefficients])
-        # create plot
-        plt.figure(figsize=(15, 5))
-        colors = ['red' if c < 0 else 'blue' for c in coef[top_coefficients]]
-        plt.bar(np.arange(2 * top_features), coef[top_coefficients], color=colors)
-        feature_names = np.array(feature_names)
-        plt.xticks(np.arange(1, 1 + 2 * top_features), feature_names[top_coefficients], rotation=60, ha='right')
-        plt.tight_layout()
-        plt.show()
+    
 
 
     def pca(self, n_components = 2):
@@ -263,4 +182,87 @@ class ClassifierSVM:
         display_cm(cv_conf, self.class_labels, 
             display_metrics=True, hide_zeros=True)
         print('\nOptimized signal classification accuracy = %.2f' % accuracy(cv_conf))
+
+    def visualize_ml_result(self, feature_names,  h = 1, count = 50):
+
+        import matplotlib.pyplot as plt
+
+        data = self.training_data.loc[:, feature_names].values
+        label = self.training_data['Class'].values
+
+        scaler = preprocessing.StandardScaler().fit(data)
+        scaled_features = scaler.transform(data)
+
+        X_train, X_test, y_train, y_test = train_test_split(scaled_features, label, test_size=0.2, random_state=42)
+
+        if count != None and len(label) > count:        
+            X = X_train[:count,:].copy()
+            y = y_train[:count].copy()
+        
+        else:
+            X = X_train.copy()
+            y = y_train.copy()
+
+        # we create an instance of SVM and fit out data. We do not scale our
+        # data since we want to plot the support vectors
+        C = 1.0  # SVM regularization parameter
+        svc = svm.SVC(kernel='linear', C=C).fit(X, y)
+        rbf_svc = svm.SVC(kernel='rbf', gamma=0.7, C=C).fit(X, y)
+        poly_svc = svm.SVC(kernel='poly', degree=3, C=C).fit(X, y)
+        lin_svc = svm.LinearSVC(C=C).fit(X, y)
+
+        # create a mesh to plot in
+        
+        x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+        y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                            np.arange(y_min, y_max, h))
+
+        # title for the plots
+        titles = ['SVC with linear kernel',
+                'LinearSVC (linear kernel)',
+                'SVC with RBF kernel',
+                'SVC with polynomial (degree 3) kernel']
+
+
+        for i, clf in enumerate((svc, lin_svc, rbf_svc, poly_svc)):
+            # Plot the decision boundary. For that, we will assign a color to each
+            # point in the mesh [x_min, m_max]x[y_min, y_max].
+            plt.subplot(2, 2, i + 1)
+            plt.subplots_adjust(wspace=0.4, hspace=0.4)
+
+            Z = clf.predict(np.c_[xx.ravel(), yy.ravel()])
+
+            # Put the result into a color plot
+            Z = Z.reshape(xx.shape)
+            plt.contourf(xx, yy, Z, cmap=plt.cm.Paired, alpha=0.5)
+
+            # Plot also the training points
+            plt.scatter(X[:, 0], X[:, 1], c=y, cmap=plt.cm.Paired)
+            plt.xlabel(feature_names[0])
+            plt.ylabel(feature_names[1])
+            plt.xlim(xx.min(), xx.max())
+            plt.ylim(yy.min(), yy.max())
+            plt.xticks(())
+            plt.yticks(())
+            plt.title(titles[i])
+
+        plt.show()
+
+    def plot_coefficients(self, top_features=20):
+        from sklearn.feature_extraction.text import CountVectorizer
+
+        feature_names = self.feature_names
+        coef = self.clf.coef_.ravel()
+        top_positive_coefficients = np.argsort(coef)[-top_features:]
+        top_negative_coefficients = np.argsort(coef)[:top_features]
+        top_coefficients = np.hstack([top_negative_coefficients, top_positive_coefficients])
+        # create plot
+        plt.figure(figsize=(15, 5))
+        colors = ['red' if c < 0 else 'blue' for c in coef[top_coefficients]]
+        plt.bar(np.arange(2 * top_features), coef[top_coefficients], color=colors)
+        feature_names = np.array(feature_names)
+        plt.xticks(np.arange(1, 1 + 2 * top_features), feature_names[top_coefficients], rotation=60, ha='right')
+        plt.tight_layout()
+        plt.show()
 

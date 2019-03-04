@@ -29,6 +29,8 @@ import numpy as np
 import pandas as pd
 from pandas import set_option
 
+import pickle
+
 from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm, create_directory
 from utils.featextractor import FeatureExtractor
 from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features,\
@@ -83,15 +85,18 @@ def main():
 
     archive_name = 'UTS' # 
 
-    dataset_name = 'MP_NOISE_P_256'#'TX_DEMO_P_256' 
+    dataset_name = 'MULTIWELL_B_P_512' #'MP_P_256'#'TX_DEMO_P_256'  #'MP_NOISE_P_256'#
 
     segment_size = int(dataset_name.split('_')[-1])
 
     classifier_name= 'SVM'
 
+    model_dir = os.path.join(root_dir, 'models', classifier_name, archive_name, dataset_name)
+
     output_directory = os.path.join(root_dir, 'results', classifier_name, archive_name, dataset_name)
 
     create_directory(output_directory)
+    create_directory(model_dir)
 
 
     print('\nInfo: ',archive_name, dataset_name, segment_size, classifier_name, '\n')
@@ -171,7 +176,7 @@ def main():
     
     ## Visualize dataset and gain insight
     # crossplot_dual_features(data, ['Peak Frequency', 'Shannon Entropy'])
-    crossplot_features(training_data, ['Event', 'Noise'])
+    #crossplot_features(training_data, ['Event', 'Noise'])
     
 
     feature_names = training_data.columns.values.tolist()[3:-1]
@@ -193,14 +198,14 @@ def main():
     feature_vector = training_data.drop(['FeatureID', 'FileName','Class','ClassLabels'], axis=1)
     feature_vector.describe()
 
-    count = 300
+    count = len(numeric_class_labels) # 300
     dataset = [(feature_vector[['Energy', 'Spectral Spread']][0:count], numeric_class_labels[0:count]),
                 (feature_vector[['Peak Frequency', 'STALTA']][0:count], numeric_class_labels[0:count]),
                 (feature_vector[['Variance', 'Kurtosis']][0:count], numeric_class_labels[0:count])]
     
     
     
-    compare_classifiers(dataset)
+    #compare_classifiers(dataset)
 
 
     ## Train Classifier
@@ -210,10 +215,14 @@ def main():
     classifier.split_dataset(classifier.scaled_features)
     classifier.fit()
     classifier.predict()
-    feature_names = ['Peak Frequency', 'Shannon Entropy']
 
-    # visualize result
-    visualize_ml_result(classifier_name, training_data, feature_names, class_labels, count = None)
+    # save trained classifier to disk
+    file_name = os.path.join(model_dir, classifier_name + '_model_raw.sav')
+    pickle.dump(classifier, open(file_name, 'wb'))
+    
+    # # visualize result
+    # feature_names = ['Peak Frequency', 'Shannon Entropy']
+    # visualize_ml_result(classifier_name, training_data, feature_names, class_labels, count = None)
   
 
     # PCA analysis
@@ -224,6 +233,9 @@ def main():
     classifier.split_dataset(classifier.pca(3)[1])
     classifier.fit() 
     classifier.predict()
+    # save trained classifier to disk
+    file_name = os.path.join(model_dir, classifier_name + '_model_pca.sav')
+    pickle.dump(classifier, open(file_name, 'wb'))
 
 
     if classifier_name == 'SVM': 
@@ -245,8 +257,6 @@ def main():
 
     print('\nTraining completed[OK]')
 
-
-    
 
 
 # This will actually run this code if called stand-alone

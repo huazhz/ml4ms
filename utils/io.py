@@ -9,6 +9,67 @@
 import os
 import numpy as np
 
+
+def wave_norm(dataset):    
+    l = len(dataset)
+    for i in np.arange(l):
+        w = dataset[i, :]
+        wnorm = w / max(abs(w))
+        dataset[i, :] = wnorm
+    return dataset
+
+def segment_trace(trace, window_length, overlap_length, norm_flag = 1, outpath = None):   
+
+    import pandas as pd 
+   
+    
+    signal_length = len(trace)       
+    step_length = window_length - overlap_length
+    number_of_windows = int(np.floor((signal_length-window_length)/step_length) + 1)
+    #data = trace.reshape((-1,1), order = 'F').copy()
+    
+    segments = np.ones((number_of_windows, window_length), dtype = np.float32)
+    wins = []
+    label_list = []
+    file_name_list = []
+        
+    for i in range(number_of_windows):
+        wstart = i * step_length
+        wend = i * step_length + window_length
+
+        label_list.append(0)
+        file_name_list.append(str(wstart)+'_'+str(wend))
+
+        segments[i,:] = trace[wstart:wend]
+        if i == 0:
+            wins = [np.arange(wstart, wend)]
+        
+        else:
+            wins = np.append(wins, [np.arange(wstart, wend)], axis = 0)
+
+    n_win = len(wins)
+
+    # Normalization
+    if norm_flag == 1:
+        data = wave_norm(segments) # rescaling real valued numeric attributes into the range -1 and 1.
+    else:
+        data = segments
+
+    labels = np.array((label_list)).reshape(-1, 1)    
+    fnames = np.array((file_name_list)).reshape(-1, 1)    
+    dataset = np.hstack((labels,data))
+
+    dataset_with_fname = np.hstack((fnames,labels,data))   
+
+    if outpath != None:
+        pd.DataFrame(dataset_with_fname).to_csv(outpath)
+
+    return dataset_with_fname, wins
+          
+     
+    
+
+
 def create_directory(directory_path): 
 
     if os.path.exists(directory_path): 
@@ -209,4 +270,6 @@ def display_adj_cm(
         
     display_cm(adj_cm, labels, hide_zeros, 
                              display_metrics)
+
+
 

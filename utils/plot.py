@@ -9,7 +9,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
+def plot_predictions(result, trace, wins):
+    fig,ax = plt.subplots(1,1)
+    ax.set_xlabel('Samples') ; ax.set_ylabel('Normalized Amplitude')
+    ax.set_xlim(0,30000) 
+    ax.set_ylim(-1.0,1.0)
+    
+    #ax.plot(trace)
 
+    for ind, val in enumerate(wins):
+        if result[ind] == 1:
+            ax.plot(val, trace[val], c = 'r' )
+        else:
+            ax.plot(val, trace[val], c = 'b' )
+
+
+    plt.show()
 def plot_correlations(features, feature_names):
 
     import seaborn as sns

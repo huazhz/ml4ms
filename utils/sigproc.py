@@ -58,7 +58,8 @@ def zcr(x):
     count = (np.diff(np.sign(x)) != 0).sum()
     rate = count/len(x)
     return rate
-
+ 
+    
 """ Frequency-domain features """
 
 def peakfreq_from_fft(sig, fs):

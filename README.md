@@ -31,6 +31,7 @@ All python packages needed are listed below and can be installed simply using th
 * [seaborn](https://seaborn.pydata.org/)
 
 
+
 ## Results
 Our results showed that a SVM classifier with Gaussian kernel performs best for the time series (microseismic and noise events) classification task.
 

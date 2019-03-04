@@ -185,7 +185,7 @@ class FeatureExtractor:
                 
                 
                 peakFreqValue.append(peakfreq_from_fft(signal, samplerate))
-                #print(peakFreqValue[-1])
+                print('Peak Frequency: %f' %(peakFreqValue[-1]))
                 staltaValue.append(max(recursive_sta_lta(signal, 40, 80))) 
                 # print(max(recursive_sta_lta(signal, 40, 80)))
                 # import matplotlib.pyplot as plt
