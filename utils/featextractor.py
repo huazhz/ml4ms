@@ -29,6 +29,9 @@ class FeatureExtractor:
     
     def set_dataset(self, df):
         self.dataset = df
+    
+    def set_class_labels(self, labels):
+        self.class_labels = labels
 
     def save_features(self, file_name):
         
@@ -291,8 +294,8 @@ class FeatureExtractor:
 
         self.feature_data = pd.DataFrame(feature_dict, index=index)
         
-        class_labels = ['Event', 'Noise']
-        self.feature_data.loc[:,'ClassLabels'] = self.feature_data.apply(lambda row: label_class(row, class_labels), axis=1)
+        
+        self.feature_data.loc[:,'ClassLabels'] = self.feature_data.apply(lambda row: label_class(row, self.class_labels), axis=1)
 
        
 

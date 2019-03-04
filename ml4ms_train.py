@@ -85,7 +85,7 @@ def main():
 
     archive_name = 'UTS' # 
 
-    dataset_name = 'MULTIWELL_B_P_512' #'MP_P_256'#'TX_DEMO_P_256'  #'MP_NOISE_P_256'#
+    dataset_name = 'TX_PSN_128'#'MULTIWELL_B_P_512' #'MP_P_256'#'TX_DEMO_P_256'  #'MP_NOISE_P_256'#
 
     segment_size = int(dataset_name.split('_')[-1])
 
@@ -109,12 +109,17 @@ def main():
     hd = 0 # .csv has header
     datasets_df = load_csv(file_name, hd, column_name)
 
+    if dataset_name.split('_')[-2] == 'PS' or dataset_name.split('_')[-2] == 'P':
+        class_labels = ['Event', 'Noise']
+    else:
+        class_labels = ['P-wave Event', 'S-wave Event','Noise']
 
     ## Extract features 
     file_name = os.path.join(root_dir,'archives', archive_name, dataset_name, dataset_name +'_features.csv')
     if not os.path.exists(file_name):
         extractor = FeatureExtractor()
         extractor.set_dataset(datasets_df)
+        extractor.set_class_labels(class_labels)
 
         fs = 500 # unit is Hz 
         window_length = segment_size  # a wavelength is usually 30 samples, we choose 2*wavelength
@@ -142,13 +147,13 @@ def main():
     training_data['FileName'] = training_data['FileName'].astype('category')
     print(training_data['FileName'].unique())
 
-    class_colors = ['#196F3D', '#F5B041']
-    class_labels = ['Event', 'Noise']
-    #class_color_map is a dictionary that maps class labels
-    #to their respective colors
-    class_color_map = {}
-    for ind, label in enumerate(class_labels):
-        class_color_map[label] = class_colors[ind]  
+    # class_colors = ['#196F3D', '#F5B041']
+    # class_labels = ['Event', 'Noise']
+    # #class_color_map is a dictionary that maps class labels
+    # #to their respective colors
+    # class_color_map = {}
+    # for ind, label in enumerate(class_labels):
+    #     class_color_map[label] = class_colors[ind]  
     
 
     # training_data.dropna(axis=0,how='any') #drop all rows that have any NaN values
@@ -159,8 +164,8 @@ def main():
     class_counts = training_data['Class'].value_counts().sort_index()
     #use class labels to index each count
     class_counts.index = class_labels
-    class_counts.plot(kind='bar',color=class_colors, 
-                    title='Distribution of Training Data by Class')
+    # class_counts.plot(kind='bar',color=class_colors, 
+    #                 title='Distribution of Training Data by Class')
     print(class_counts)
 
     # ## save plot display settings to change back to when done plotting with seaborn

@@ -52,7 +52,7 @@ def main():
 
     archive_name = 'FIELDDATA' # 
 
-    dataset_name =  'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
+    dataset_name =  'TX_PSN_128'#'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
     
 
     segment_size = int(dataset_name.split('_')[-1])
@@ -61,7 +61,7 @@ def main():
 
     model_dir = os.path.join(root_dir, 'models', classifier_name, 'UTS', dataset_name)
 
-    feature_dir = os.path.join(root_dir, 'archives', archive_name)
+    feature_dir = os.path.join(root_dir, 'archives', archive_name, dataset_name)
     
    
     create_directory(feature_dir)
@@ -96,7 +96,10 @@ def main():
     hd = 0 # .csv has header
     datasets_df = load_csv(file_name, hd, column_name)
     
-    
+    if dataset_name.split('_')[-2] == 'PS' or dataset_name.split('_')[-2] == 'P':
+        class_labels = ['Event', 'Noise']
+    else:
+        class_labels = ['P-wave Event', 'S-wave Event','Noise']
 
     ## Extract features 
     file_name = os.path.join(feature_dir, '181105_025200_6_features.csv')
@@ -104,6 +107,7 @@ def main():
     if not os.path.exists(file_name):
         extractor = FeatureExtractor()
         extractor.set_dataset(datasets_df)
+        extractor.set_class_labels(class_labels)
 
         extractor.extract_features(fs, window_length, overlap_length, segment_size)
         extractor.save_features(file_name)
@@ -135,7 +139,7 @@ def main():
     result = loaded_model.clf.predict(scaled_features)
     print(result)
 
-    trace = segy.normedTraces(segy.zTraces)[:,6]
+    trace = segy.normedTraces(segy.zTraces)[:,1]
     plot_predictions(result, trace, wins)
 
 

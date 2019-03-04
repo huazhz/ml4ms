@@ -20,8 +20,10 @@ def plot_predictions(result, trace, wins):
     for ind, val in enumerate(wins):
         if result[ind] == 1:
             ax.plot(val, trace[val], c = 'r' )
-        else:
+        elif result[ind] == 2:
             ax.plot(val, trace[val], c = 'b' )
+        elif result[ind] == 3:
+            ax.plot(val, trace[val], c = 'k' )
 
 
     plt.show()
