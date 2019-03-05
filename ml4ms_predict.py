@@ -52,7 +52,7 @@ def main():
 
     archive_name = 'FIELDDATA' # 
 
-    dataset_name =  'TX_PSN_128'#'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
+    dataset_name =  'TX_P_128'#'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
     
 
     segment_size = int(dataset_name.split('_')[-1])

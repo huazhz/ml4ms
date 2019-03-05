@@ -116,7 +116,7 @@ class ClassifierSVM:
     def fit(self, kernel = 'rbf', random_state = 0):        
         ## Training the SVM classifier
         
-        self.clf = svm.SVC(kernel= kernel, random_state = random_state)
+        self.clf = svm.SVC(kernel= kernel, random_state = random_state, probability=True)
         self.clf.fit(self.X_train, self.y_train)
     
     def predict(self):

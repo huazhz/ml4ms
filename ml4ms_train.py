@@ -34,7 +34,7 @@ import pickle
 from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data, feature_normalize, wave_norm, create_directory
 from utils.featextractor import FeatureExtractor
 from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features,\
-     crossplot_pca, heatplot_pca, plot_correlations, compare_classifiers
+     crossplot_pca, heatplot_pca, plot_correlations, compare_classifiers, plot_ROC, calc_auc
 
 
 
@@ -85,11 +85,11 @@ def main():
 
     archive_name = 'UTS' # 
 
-    dataset_name = 'TX_PSN_128'#'MULTIWELL_B_P_512' #'MP_P_256'#'TX_DEMO_P_256'  #'MP_NOISE_P_256'#
+    dataset_name = 'MP_P_128'#'MP_NOISE_P_128' #'MULTIWELL_A_P_512' # 'TX_DEMO_P_256' #'TX_PSN_128'# 'TX_DEMO_P_256'  ##
 
     segment_size = int(dataset_name.split('_')[-1])
 
-    classifier_name= 'SVM'
+    classifier_name= 'SVM' #'DecisionTree'#
 
     model_dir = os.path.join(root_dir, 'models', classifier_name, archive_name, dataset_name)
 
@@ -219,7 +219,11 @@ def main():
     classifier.set_data(training_data, class_labels) 
     classifier.split_dataset(classifier.scaled_features)
     classifier.fit()
-    classifier.predict()
+    #classifier.predict()
+
+    y_pred = classifier.clf.predict_proba(classifier.X_test)[:,1]
+    plot_ROC(classifier.y_test, y_pred, pos_label = 2)
+    calc_auc(classifier.y_test, y_pred, pos_label = 2)
 
     # save trained classifier to disk
     file_name = os.path.join(model_dir, classifier_name + '_model_raw.sav')
@@ -231,13 +235,18 @@ def main():
   
 
     # PCA analysis
+    n_components = 3
     print('\nPCA analysis results:\n')
-    crossplot_pca(classifier.pca(3)[1], classifier.feature_labels)
-    heatplot_pca(classifier.pca(3)[0], classifier.feature_names)
+    crossplot_pca(classifier.pca(n_components)[1], classifier.feature_labels)
+    heatplot_pca(classifier.pca(n_components)[0], classifier.feature_names)
 
-    classifier.split_dataset(classifier.pca(3)[1])
+    classifier.split_dataset(classifier.pca(n_components)[1])
     classifier.fit() 
     classifier.predict()
+    y_pred = classifier.clf.predict_proba(classifier.X_test)[:,1]
+    plot_ROC(classifier.y_test, y_pred, pos_label = 2)
+    calc_auc(classifier.y_test, y_pred, pos_label = 2)
+
     # save trained classifier to disk
     file_name = os.path.join(model_dir, classifier_name + '_model_pca.sav')
     pickle.dump(classifier, open(file_name, 'wb'))

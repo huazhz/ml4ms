@@ -9,6 +9,43 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
 
+def calc_auc(labels,y_pred_proba, pos_label = 1):
+    
+    from sklearn import metrics
+    fpr, tpr, thresholds = metrics.roc_curve(
+        labels,y_pred_proba,pos_label=pos_label)
+    curve_roc = np.array([fpr, tpr])
+    auc = "%.2f" % metrics.auc(fpr, tpr)
+    plt.plot(fpr, tpr, label='ROC curve: AUC={0:0.2f}'.format(float(auc)))
+    plt.xlabel('1-Specificity')
+    plt.ylabel('Sensitivity')
+    plt.ylim([0.0, 1.05])
+    plt.xlim([0.0, 1.0])
+    plt.grid(True)
+    plt.title('ROC Curve, AUC = '+str(auc))
+    plt.legend(loc="lower left")
+    plt.show()
+    return auc 
+
+def plot_ROC(test_labels, test_predictions, pos_label = 1):
+    from sklearn import metrics
+    fpr, tpr, thresholds = metrics.roc_curve(
+        test_labels, test_predictions, pos_label= pos_label)
+    auc = "%.2f" % metrics.auc(fpr, tpr)
+    title = 'ROC Curve, AUC = '+str(auc)
+    with plt.style.context(('ggplot')):
+        fig, ax = plt.subplots()
+        ax.plot(fpr, tpr, "#000099", label='ROC curve')
+        ax.plot([0, 1], [0, 1], 'k--', label='Baseline')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.legend(loc='lower right')
+        plt.title(title)
+        plt.show()
+    return fig
+
 def plot_predictions(result, trace, wins):
     fig,ax = plt.subplots(1,1)
     ax.set_xlabel('Samples') ; ax.set_ylabel('Normalized Amplitude')
