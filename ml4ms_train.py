@@ -50,12 +50,12 @@ def create_classifier(classifier_name):
         from classifiers import knn
         return knn.ClassifierKNN()
 
-    elif classifier_name=='DecisionTree': 
+    elif classifier_name=='DT': 
 
         from classifiers import dtree
         return dtree.ClassifierDecisionTree()
     
-    elif classifier_name=='LogisticRegression':
+    elif classifier_name=='LogReg':
 
         from classifiers import logreg
         return logreg.ClassifierLogisticRegression()
@@ -85,11 +85,11 @@ def main():
 
     archive_name = 'UTS' # 
 
-    dataset_name = 'MP_P_128'#'MP_NOISE_P_128' #'MULTIWELL_A_P_512' # 'TX_DEMO_P_256' #'TX_PSN_128'# 'TX_DEMO_P_256'  ##
+    dataset_name = 'MP_PSN_ZZ_256'#'MULTIWELL_B_P_512' #'MP_NOISE_P_128' # 'TX_DEMO_P_256' #'TX_PSN_128'# 'TX_DEMO_P_256'  ##
 
     segment_size = int(dataset_name.split('_')[-1])
 
-    classifier_name= 'SVM' #'DecisionTree'#
+    classifier_name= 'QDA'#
 
     model_dir = os.path.join(root_dir, 'models', classifier_name, archive_name, dataset_name)
 
@@ -219,11 +219,11 @@ def main():
     classifier.set_data(training_data, class_labels) 
     classifier.split_dataset(classifier.scaled_features)
     classifier.fit()
-    #classifier.predict()
+    classifier.predict()
 
     y_pred = classifier.clf.predict_proba(classifier.X_test)[:,1]
     plot_ROC(classifier.y_test, y_pred, pos_label = 2)
-    calc_auc(classifier.y_test, y_pred, pos_label = 2)
+    #calc_auc(classifier.y_test, y_pred, pos_label = 2)
 
     # save trained classifier to disk
     file_name = os.path.join(model_dir, classifier_name + '_model_raw.sav')
@@ -245,7 +245,7 @@ def main():
     classifier.predict()
     y_pred = classifier.clf.predict_proba(classifier.X_test)[:,1]
     plot_ROC(classifier.y_test, y_pred, pos_label = 2)
-    calc_auc(classifier.y_test, y_pred, pos_label = 2)
+    #calc_auc(classifier.y_test, y_pred, pos_label = 2)
 
     # save trained classifier to disk
     file_name = os.path.join(model_dir, classifier_name + '_model_pca.sav')

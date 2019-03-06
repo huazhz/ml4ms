@@ -49,7 +49,7 @@ def plot_ROC(test_labels, test_predictions, pos_label = 1):
 def plot_predictions(result, trace, wins):
     fig,ax = plt.subplots(1,1)
     ax.set_xlabel('Samples') ; ax.set_ylabel('Normalized Amplitude')
-    ax.set_xlim(0,30000) 
+    ax.set_xlim(0,len(trace)) 
     ax.set_ylim(-1.0,1.0)
     
     #ax.plot(trace)

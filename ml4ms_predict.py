@@ -39,6 +39,7 @@ from utils.io import load_data, load_csv, display_adj_cm, display_cm, read_data,
 from utils.featextractor import FeatureExtractor
 from utils.plot import visualize_ml_result, plot_coefficients, crossplot_features, crossplot_dual_features,\
      crossplot_pca, heatplot_pca, plot_correlations, compare_classifiers, plot_predictions
+from utils.eventdetector import EventDetector
 
 
 
@@ -52,7 +53,7 @@ def main():
 
     archive_name = 'FIELDDATA' # 
 
-    dataset_name =  'TX_P_128'#'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
+    dataset_name =  'MP_PSN_ZZ_256'#'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
     
 
     segment_size = int(dataset_name.split('_')[-1])
@@ -70,22 +71,26 @@ def main():
 
     print('\nInfo: ',archive_name, dataset_name, segment_size, classifier_name, '\n')
 
-
+    time_stamp ='181105_025900' # '140605_041500'#
+    trace_id = 2  
+    wstart = 0
+    wend = 30000 
     
-    file_name = os.path.join(feature_dir, '181105_025200_6.csv') # start from 0
-    file_name = os.path.join(feature_dir, '140605_041500_1.csv') # start from 0
+    file_name = os.path.join(feature_dir, time_stamp+ '_'+ str(trace_id) +'.csv') # start from 0
+    
 
 
     ## Transform field data trace into dataframe in order to extract features
+    #segy_dir = 'F:\\datafolder\\tx1\\segy_modified'
+    segy_dir = 'F:\\datafolder\\MP54-3-1S\\181105_modified'
+    fname = os.path.join(segy_dir, time_stamp +'.sgy')
     
-    fname = 'F:\\datafolder\\MP54-3-1S\\181105_modified\\181105_025200.sgy'
-    fname = 'F:\\datafolder\\tx1\\segy_modified\\140605_041500.sgy'
     segy = pssegy.Segy(fname)
-    z_trace = segy.zTraces[:,0]
+    z_trace = segy.zTraces[:,trace_id ][wstart:wend]
 
     fs = 500 # unit is Hz 
     window_length = segment_size  # a wavelength is usually 30 samples, we choose 2*wavelength
-    overlap_length = int(window_length/2)
+    overlap_length = 0 #int(window_length/2)
     signal_length = z_trace.shape[0]
     step_length = window_length - overlap_length
     number_of_windows = int(np.floor((signal_length-window_length)/step_length) + 1)
@@ -102,8 +107,8 @@ def main():
         class_labels = ['P-wave Event', 'S-wave Event','Noise']
 
     ## Extract features 
-    file_name = os.path.join(feature_dir, '181105_025200_6_features.csv')
-    file_name = os.path.join(feature_dir, '140605_041500_1_features.csv')
+    file_name = os.path.join(feature_dir, time_stamp+ '_'+ str(trace_id) +'_features.csv') # start from 0
+    
     if not os.path.exists(file_name):
         extractor = FeatureExtractor()
         extractor.set_dataset(datasets_df)
@@ -139,8 +144,10 @@ def main():
     result = loaded_model.clf.predict(scaled_features)
     print(result)
 
-    trace = segy.normedTraces(segy.zTraces)[:,1]
-    plot_predictions(result, trace, wins)
+    trace = segy.normedTraces(segy.zTraces)[:,trace_id][wstart:wend]
+    plot_predictions(result, trace, wins)    
+    detector = EventDetector(trace, wins, result)
+    
 
 
     file_name = os.path.join(model_dir, classifier_name + '_model_pca.sav')
@@ -153,7 +160,7 @@ def main():
     plot_predictions(result, trace, wins)
     
 
-    
+    detector = EventDetector(trace, wins, result)
 
 
     
