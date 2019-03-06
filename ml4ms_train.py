@@ -85,11 +85,11 @@ def main():
 
     archive_name = 'UTS' # 
 
-    dataset_name = 'MP_PSN_ZZ_256'#'MULTIWELL_B_P_512' #'MP_NOISE_P_128' # 'TX_DEMO_P_256' #'TX_PSN_128'# 'TX_DEMO_P_256'  ##
+    dataset_name = 'TX_DEMO_P_256' #'MP_NOISE_PSN_ZZ_256'#MP_PSN_ZZ_256'#'MULTIWELL_B_P_512' #'MP_NOISE_P_128' #  #'TX_PSN_128'# 'TX_DEMO_P_256'  ##
 
     segment_size = int(dataset_name.split('_')[-1])
 
-    classifier_name= 'QDA'#
+    classifier_name= 'SVM'#
 
     model_dir = os.path.join(root_dir, 'models', classifier_name, archive_name, dataset_name)
 

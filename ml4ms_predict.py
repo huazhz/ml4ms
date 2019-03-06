@@ -53,7 +53,7 @@ def main():
 
     archive_name = 'FIELDDATA' # 
 
-    dataset_name =  'MP_PSN_ZZ_256'#'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
+    dataset_name =  'MP_NOISE_PSN_ZZ_256'#'MULTIWELL_B_P_512'#'MP_P_256'#'TX_P_TRAIN_256'
     
 
     segment_size = int(dataset_name.split('_')[-1])
@@ -71,10 +71,10 @@ def main():
 
     print('\nInfo: ',archive_name, dataset_name, segment_size, classifier_name, '\n')
 
-    time_stamp ='181105_025900' # '140605_041500'#
-    trace_id = 2  
-    wstart = 0
-    wend = 30000 
+    time_stamp ='181105_033900' # '140605_041500'#
+    trace_id = 6
+    wstart = 0#2744
+    wend = 30000#12744 
     
     file_name = os.path.join(feature_dir, time_stamp+ '_'+ str(trace_id) +'.csv') # start from 0
     
@@ -90,7 +90,7 @@ def main():
 
     fs = 500 # unit is Hz 
     window_length = segment_size  # a wavelength is usually 30 samples, we choose 2*wavelength
-    overlap_length = 0 #int(window_length/2)
+    overlap_length = int(window_length/2)
     signal_length = z_trace.shape[0]
     step_length = window_length - overlap_length
     number_of_windows = int(np.floor((signal_length-window_length)/step_length) + 1)

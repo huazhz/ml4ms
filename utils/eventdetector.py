@@ -50,7 +50,7 @@ class EventDetector:
     def update(self, newln):
         
         if self.count == 0:
-            time.sleep(15)
+            time.sleep(10)
         else:
             time.sleep(1)
         #self.ln.set_data(newln[0][0], newln[1])
